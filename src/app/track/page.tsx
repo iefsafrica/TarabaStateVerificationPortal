@@ -239,9 +239,12 @@ export default function TrackPage() {
       {/* Print-only Status Report Document */}
       {result && (
         <div id="print-status-report" className="print-only-container p-8 font-sans max-w-2xl mx-auto">
-          <div className="text-center border-b-2 border-green-700 pb-4 mb-6">
-            <h1 className="text-xl font-bold text-green-800">TARABA STATE GOVERNMENT</h1>
-            <p className="text-sm text-slate-600">Staff Onboarding & Verification Portal — Verification Status Report</p>
+          <div className="flex items-center gap-4 border-b-2 border-green-700 pb-4 mb-6 text-left">
+            <Image src="/images/tsu-logo.png" alt="Taraba State Logo" width={56} height={56} className="h-14 w-14 object-contain shrink-0" />
+            <div>
+              <h1 className="text-xl font-bold text-green-800">TARABA STATE GOVERNMENT</h1>
+              <p className="text-sm text-slate-600">Staff Onboarding & Verification Portal — Verification Status Report</p>
+            </div>
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-center">
             <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Registration Number</p>
