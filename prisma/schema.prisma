@@ -76,6 +76,10 @@ model Employee {
   educationalBackground String?
   certifications        String?
 
+  // Verification
+  ninVerified   Boolean  @default(false)
+  ninData       Json?
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

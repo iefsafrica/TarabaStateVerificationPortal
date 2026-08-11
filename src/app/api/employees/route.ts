@@ -95,6 +95,9 @@ export async function POST(request: Request) {
         
         educationalBackground: data.educationalBackground,
         certifications: data.certifications,
+
+        ninVerified: data.ninVerified || false,
+        ninData: data.ninData || null,
       },
     });
 

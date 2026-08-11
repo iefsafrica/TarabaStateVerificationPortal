@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import naija from "naija-state-local-government";
+import Script from "next/script";
 
 // Helper component for standard inputs moved outside to prevent re-renders causing focus loss
 const InputGroup = ({ label, name, value, onChange, type = "text", placeholder, required = false }: any) => (
@@ -74,6 +75,58 @@ export default function AddEmployeePage() {
     certifications: "",
   });
 
+  const [ninVerified, setNinVerified] = useState(false);
+  const [ninData, setNinData] = useState<any>(null);
+  // Ensure stable userRef per component lifecycle
+  const userRef = useState(`emp-${Date.now()}`)[0];
+
+  const handleVerifyNin = () => {
+    if (!(window as any).KycWidget) {
+      toast.error("KYC Widget not loaded yet. Please try again in a moment.");
+      return;
+    }
+
+    const handle = (window as any).KycWidget.init({
+      publicKey: process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e",
+      userRef,
+      slug: "Ippis_nin_verification",
+      name: "Taraba Staff", // We could pass formData.firstName if we wanted
+      levelSlug: "tier_1",
+      display: "modal",
+      callbacks: {
+        onSuccess: async () => {
+          toast.success("Verification successful! Fetching data...");
+          try {
+            const res = await fetch(`/api/kyc-status?userRef=${userRef}&slug=Ippis_nin_verification`);
+            const data = await res.json();
+            
+            if (data && !data.error) {
+              setNinVerified(true);
+              setNinData(data);
+              
+              // Map verified data into form safely if available
+              setFormData(prev => ({
+                ...prev,
+                nin: data.nin || data.NIN || prev.nin,
+                firstName: data.firstName || data.firstname || prev.firstName,
+                lastName: data.lastName || data.surname || prev.lastName,
+                birthdate: data.birthdate || data.dob || prev.birthdate,
+              }));
+              toast.success("NIN Data securely fetched and auto-filled.");
+            } else {
+              toast.error("Failed to fetch verified data from our server.");
+            }
+          } catch (e) {
+            toast.error("Error communicating with server.");
+          }
+        },
+        onError: ({ message }: any) => {
+          toast.error(`Verification error: ${message}`);
+        },
+      }
+    });
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => {
@@ -91,10 +144,16 @@ export default function AddEmployeePage() {
     setIsSubmitting(true);
 
     try {
+      const payload = {
+        ...formData,
+        ninVerified,
+        ninData
+      };
+
       const res = await fetch("/api/employees", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -113,6 +172,8 @@ export default function AddEmployeePage() {
 
   return (
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in-up">
+      <Script src="https://kyc-verify-v2.netapps.ng/embed.js" strategy="lazyOnload" />
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <Link href="/admin/employees" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-2">
@@ -164,7 +225,37 @@ export default function AddEmployeePage() {
             <InputGroup label="Email Address" name="email" value={formData.email} onChange={handleChange} type="email" placeholder="Enter email" required />
             <InputGroup label="Telephone Number" name="telephone" value={formData.telephone} onChange={handleChange} placeholder="Enter phone number" required />
             <InputGroup label="Birthdate" name="birthdate" value={formData.birthdate} onChange={handleChange} type="date" required />
-            <InputGroup label="NIN" name="nin" value={formData.nin} onChange={handleChange} placeholder="Enter NIN" required />
+            
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 flex justify-between">
+                <span>NIN <span className="text-red-500">*</span></span>
+                {ninVerified ? (
+                  <span className="text-green-600 text-xs flex items-center gap-1 font-bold"><ShieldCheck className="h-3 w-3"/> Verified</span>
+                ) : (
+                  <span className="text-amber-600 text-xs flex items-center gap-1 font-bold"><ShieldAlert className="h-3 w-3"/> Unverified</span>
+                )}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  name="nin"
+                  required
+                  value={formData.nin}
+                  onChange={handleChange}
+                  placeholder="Enter NIN"
+                  className={`w-full h-10 px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] focus:border-transparent transition-colors ${ninVerified ? 'border-green-300 bg-green-50' : 'border-gray-300'}`}
+                />
+                {!ninVerified && (
+                  <button 
+                    type="button" 
+                    onClick={handleVerifyNin}
+                    className="whitespace-nowrap px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors"
+                  >
+                    Verify NIN
+                  </button>
+                )}
+              </div>
+            </div>
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">Gender <span className="text-red-500">*</span></label>
