@@ -121,7 +121,13 @@ export default function AdminLayout({
               className="object-contain md:hidden"
             />
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
+              <h1 className="text-xl font-bold text-gray-900">
+                {pathname === "/admin/dashboard" && "Dashboard"}
+                {pathname === "/admin/employees" && "Employee"}
+                {pathname === "/admin/files" && "File Manager"}
+                {pathname === "/admin/roles" && "Roles"}
+                {pathname === "/admin/permissions" && "Permissions"}
+              </h1>
               <p className="text-xs text-gray-500">Taraba State Verification Portal</p>
             </div>
           </div>
