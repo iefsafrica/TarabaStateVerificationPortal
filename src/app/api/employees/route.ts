@@ -32,3 +32,78 @@ export async function GET() {
     );
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const data = await request.json();
+
+    // Basic validation for required fields
+    if (!data.firstName || !data.lastName || !data.email) {
+      return NextResponse.json(
+        { success: false, error: "Missing required fields (firstName, lastName, email)" },
+        { status: 400 }
+      );
+    }
+
+    const newEmployee = await prisma.employee.create({
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        department: data.department || "Unassigned",
+        position: data.position || "Staff",
+        status: data.status || "Active",
+        
+        middleName: data.middleName,
+        title: data.title,
+        telephone: data.telephone,
+        birthdate: data.birthdate ? new Date(data.birthdate) : null,
+        nin: data.nin,
+        gender: data.gender,
+        maritalStatus: data.maritalStatus,
+        stateOfOrigin: data.stateOfOrigin,
+        residentialAddress: data.residentialAddress,
+        stateOfResidence: data.stateOfResidence,
+        lga: data.lga,
+        profession: data.profession,
+        
+        nokName: data.nokName,
+        nokRelationship: data.nokRelationship,
+        nokPhone: data.nokPhone,
+        nokAddress: data.nokAddress,
+        
+        employmentId: data.employmentId,
+        serviceNo: data.serviceNo,
+        fileNo: data.fileNo,
+        rank: data.rank,
+        organization: data.organization,
+        employmentType: data.employmentType,
+        probationPeriod: data.probationPeriod,
+        
+        workLocation: data.workLocation,
+        dateOfFirstAppointment: data.dateOfFirstAppointment ? new Date(data.dateOfFirstAppointment) : null,
+        salaryStructure: data.salaryStructure,
+        gradeLevel: data.gradeLevel,
+        step: data.step,
+        cadre: data.cadre,
+        
+        bankName: data.bankName,
+        accountNumber: data.accountNumber,
+        nuban: data.nuban,
+        pfaName: data.pfaName,
+        rsaPin: data.rsaPin,
+        
+        educationalBackground: data.educationalBackground,
+        certifications: data.certifications,
+      },
+    });
+
+    return NextResponse.json({ success: true, data: newEmployee });
+  } catch (error) {
+    console.error("Error creating employee:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to create employee" },
+      { status: 500 }
+    );
+  }
+}

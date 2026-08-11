@@ -16,6 +16,7 @@ import {
   Loader2
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 type Employee = {
   id: string;
@@ -140,10 +141,13 @@ export default function EmployeesPage() {
           </div>
           
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 bg-[#00894F] text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm text-sm">
+            <Link 
+              href="/admin/employees/add"
+              className="flex items-center gap-2 bg-[#00894F] text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm text-sm"
+            >
               <Plus className="h-4 w-4" />
               Add Employee
-            </button>
+            </Link>
             <button className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm text-sm">
               <Download className="h-4 w-4" />
               Export

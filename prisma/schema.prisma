@@ -27,6 +27,55 @@ model Employee {
   status        String   @default("Active") // Active, Pending, Inactive
   joinDate      DateTime @default(now())
   documentCount Int      @default(0)
+
+  // Personal Details
+  middleName         String?
+  title              String?
+  telephone          String?
+  birthdate          DateTime?
+  nin                String?
+  gender             String?
+  maritalStatus      String?
+  stateOfOrigin      String?
+  residentialAddress String?
+  stateOfResidence   String?
+  lga                String?
+  profession         String?
+
+  // Next of Kin
+  nokName            String?
+  nokRelationship    String?
+  nokPhone           String?
+  nokAddress         String?
+
+  // Employment Record
+  employmentId       String?
+  serviceNo          String?
+  fileNo             String?
+  rank               String?
+  organization       String?
+  employmentType     String?
+  probationPeriod    String?
+
+  // Employment Details
+  workLocation       String?
+  dateOfFirstAppointment DateTime?
+  salaryStructure    String?
+  gradeLevel         String?
+  step               String?
+  cadre              String?
+
+  // Banking and Pension
+  bankName           String?
+  accountNumber      String?
+  nuban              String?
+  pfaName            String?
+  rsaPin             String?
+
+  // Education
+  educationalBackground String?
+  certifications        String?
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
