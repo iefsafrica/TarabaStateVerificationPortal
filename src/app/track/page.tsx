@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, ArrowLeft, Loader2, CheckCircle2, Clock, XCircle, BadgeCheck, User, Briefcase, Calendar, Mail, Phone, Building } from "lucide-react";
+import { Search, ArrowLeft, Loader2, CheckCircle2, Clock, XCircle, BadgeCheck, User, Briefcase, Calendar, Mail, Phone, Building, Download } from "lucide-react";
 import { toast } from "sonner";
 
 type Registration = {
@@ -221,13 +221,66 @@ export default function TrackPage() {
               <TimelineItem done={true} label="Registration Submitted" date={new Date(result.createdAt).toLocaleDateString("en-NG", { dateStyle: "medium" })} />
               <TimelineItem done={result.ninVerified} label="NIN Identity Verification" date={result.ninVerified ? "Completed" : "Pending"} />
               <TimelineItem done={result.status === "Approved"} label="Document Review" date={result.status === "Approved" ? "Completed" : result.status === "Rejected" ? "Rejected" : "In Progress"} isRejected={result.status === "Rejected"} />
-              <TimelineItem done={result.status === "Approved"} label="Final Approval" date={result.status === "Approved" ? "Approved" : "Awaiting Review"} />
             </div>
           </div>
+
+          {/* Download Status Report Button */}
+          <button
+            onClick={() => window.print()}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-white border-2 border-green-600 text-green-700 rounded-2xl font-semibold hover:bg-green-50 transition-colors shadow-sm text-sm"
+          >
+            <Download className="h-4 w-4" />
+            Download Status Report
+          </button>
 
         </div>
       )}
 
+      {/* Print-only Status Report Document */}
+      {result && (
+        <div id="print-status-report" className="hidden print:block p-8 font-sans max-w-2xl mx-auto">
+          <div className="text-center border-b-2 border-green-700 pb-4 mb-6">
+            <h1 className="text-xl font-bold text-green-800">TARABA STATE GOVERNMENT</h1>
+            <p className="text-sm text-slate-600">Staff Onboarding & Verification Portal — Verification Status Report</p>
+          </div>
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-center">
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Registration Number</p>
+            <p className="text-2xl font-bold text-green-700 tracking-widest mt-1">{result.registrationNo}</p>
+            <p className="text-xs text-slate-500 mt-1">Status: <strong>{result.status}</strong></p>
+          </div>
+          <table className="w-full text-sm border-collapse">
+            <tbody>
+              {[
+                ["Full Name", `${result.firstName} ${result.middleName || ""} ${result.lastName}`.trim()],
+                ["Email Address", result.email],
+                ["Phone Number", result.phone || "—"],
+                ["Department", result.department || "—"],
+                ["Designation", result.designation || "—"],
+                ["Grade Level", result.grade || "—"],
+                ["NIN Identity Verification", result.ninVerified ? "Verified" : "Pending"],
+                ["Current Application Status", result.status],
+                ["Date Submitted", new Date(result.createdAt).toLocaleDateString("en-NG", { dateStyle: "long" })],
+                ["Report Generated On", new Date().toLocaleDateString("en-NG", { dateStyle: "long" })],
+              ].map(([lbl, val], idx) => (
+                <tr key={lbl} className={idx % 2 === 0 ? "bg-slate-50" : "bg-white"}>
+                  <td className="py-2.5 px-3 font-semibold text-slate-600 border-b border-slate-200 w-1/2">{lbl}</td>
+                  <td className="py-2.5 px-3 text-slate-900 border-b border-slate-200">{val}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="text-center text-xs text-slate-400 mt-8">
+            © {new Date().getFullYear()} Taraba State Verification Portal. Official Computer-Generated Document.
+          </p>
+        </div>
+      )}
+
+      <style jsx global>{`
+        @media print {
+          body > *:not(#print-status-report) { display: none !important; }
+          #print-status-report { display: block !important; }
+        }
+      `}</style>
     </div>
   );
 }

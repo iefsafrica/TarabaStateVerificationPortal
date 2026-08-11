@@ -17,11 +17,17 @@ export async function GET(request: Request) {
     let registration: any = null;
 
     if (registrationNo) {
-      registration = await (prisma.registration as any).findUnique({
-        where: { registrationNo: registrationNo.trim().toUpperCase() }
-      });
+      if (prisma.registration) {
+        try {
+          registration = await (prisma.registration as any).findUnique({
+            where: { registrationNo: registrationNo.trim().toUpperCase() }
+          });
+        } catch {
+          registration = null;
+        }
+      }
       // Fallback: check serviceNo/employmentId/id in Employee table
-      if (!registration) {
+      if (!registration && prisma.employee) {
         const emp = await (prisma.employee as any).findFirst({
           where: {
             OR: [
@@ -33,7 +39,7 @@ export async function GET(request: Request) {
         });
         if (emp) {
           registration = {
-            registrationNo: emp.employmentId || emp.serviceNo || emp.id,
+            registrationNo: emp.employmentId || emp.serviceNo || `EMP-${emp.id.slice(0, 8).toUpperCase()}`,
             firstName: emp.firstName,
             lastName: emp.lastName,
             middleName: emp.middleName,
@@ -50,18 +56,24 @@ export async function GET(request: Request) {
         }
       }
     } else if (email) {
-      registration = await (prisma.registration as any).findFirst({
-        where: {
-          email: {
-            equals: email.trim(),
-            mode: "insensitive",
-          },
-        },
-        orderBy: { createdAt: "desc" }
-      });
+      if (prisma.registration) {
+        try {
+          registration = await (prisma.registration as any).findFirst({
+            where: {
+              email: {
+                equals: email.trim(),
+                mode: "insensitive",
+              },
+            },
+            orderBy: { createdAt: "desc" }
+          });
+        } catch {
+          registration = null;
+        }
+      }
 
       // Fallback: check Employee table if not in Registration table
-      if (!registration) {
+      if (!registration && prisma.employee) {
         const emp = await (prisma.employee as any).findFirst({
           where: {
             email: {
