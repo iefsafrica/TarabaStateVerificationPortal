@@ -39,6 +39,11 @@ export default function EmployeesPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredEmployees = employees.filter(emp => {
+    // 1. Filter by Active Tab
+    if (activeTab === "Staff" && emp.status !== "Active") return false;
+    if (activeTab === "Pending Staff" && emp.status !== "Pending") return false;
+
+    // 2. Filter by Search Query
     if (!searchQuery.trim()) return true;
     const lowerQuery = searchQuery.toLowerCase();
     return (
@@ -150,8 +155,8 @@ export default function EmployeesPage() {
         {/* Panel Header */}
         <div className="p-6 sm:p-8 bg-gray-50 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Staff</h2>
-            <p className="text-sm text-gray-500 mt-1">Manage and view all approved staff in the system.</p>
+            <h2 className="text-xl font-bold text-gray-900">{activeTab}</h2>
+            <p className="text-sm text-gray-500 mt-1">Manage and view {activeTab.toLowerCase()} in the system.</p>
           </div>
           
           <div className="flex items-center gap-3">
