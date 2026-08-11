@@ -89,7 +89,7 @@ export default function AddEmployeePage() {
     const handle = (window as any).KycWidget.init({
       publicKey: process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e",
       userRef,
-      slug: "Ippis_nin_verification",
+      slug: "ippis_nin_verification",
       name: "Taraba Staff", // We could pass formData.firstName if we wanted
       levelSlug: "tier_1",
       display: "modal",
@@ -98,7 +98,7 @@ export default function AddEmployeePage() {
         onSuccess: async () => {
           toast.success("Verification successful! Fetching data...");
           try {
-            const res = await fetch(`/api/kyc-status?userRef=${userRef}&slug=Ippis_nin_verification`);
+            const res = await fetch(`/api/kyc-status?userRef=${userRef}&slug=ippis_nin_verification`);
             const data = await res.json();
             
             if (data && !data.error) {
