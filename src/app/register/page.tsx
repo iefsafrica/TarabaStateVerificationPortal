@@ -70,55 +70,65 @@ export default function RegisterPage() {
       return;
     }
 
-    if (!(window as any).KycWidget) {
-      toast.error("KYC Widget not loaded yet. Please try again.");
-      return;
-    }
-
     setIsVerifyingNin(true);
-    (window as any).KycWidget.init({
-      publicKey: process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e",
-      userRef,
-      slug: "ippis_nin_verification",
-      name: formData.firstName ? `${formData.firstName} ${formData.lastName}`.trim() : "Applicant",
-      levelSlug: "tier_1",
-      display: "modal",
-      environment: "live",
-      callbacks: {
-        onSuccess: async () => {
-          toast.success("Verification successful! Fetching data...");
-          try {
-            const res = await fetch(`/api/kyc-status?userRef=${userRef}&slug=ippis_nin_verification`);
-            const data = await res.json();
-            if (data && !data.error) {
-              setNinVerified(true);
-              setFormData(prev => ({
-                ...prev,
-                nin: data.nin || data.NIN || prev.nin,
-                firstName: data.firstName || data.firstname || prev.firstName,
-                lastName: data.lastName || data.surname || prev.lastName,
-                dateOfBirth: data.birthdate || data.dob || prev.dateOfBirth,
-                ninData: data,
-              }));
-              toast.success("NIN verified and data auto-filled.");
-            } else {
-              toast.error("Failed to fetch verified data.");
-            }
-          } catch {
-            toast.error("Error communicating with server.");
-          } finally {
-            setIsVerifyingNin(false);
+
+    // Poll until KycWidget is available (up to 2 seconds)
+    let attempts = 0;
+    const tryLaunch = () => {
+      if ((window as any).KycWidget) {
+        (window as any).KycWidget.init({
+          publicKey: process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e",
+          userRef,
+          slug: "ippis_nin_verification",
+          name: formData.firstName ? `${formData.firstName} ${formData.lastName}`.trim() : "Applicant",
+          levelSlug: "tier_1",
+          display: "modal",
+          environment: "live",
+          callbacks: {
+            onSuccess: async () => {
+              toast.success("Verification successful! Fetching data...");
+              try {
+                const res = await fetch(`/api/kyc-status?userRef=${userRef}&slug=ippis_nin_verification`);
+                const data = await res.json();
+                if (data && !data.error) {
+                  setNinVerified(true);
+                  setFormData(prev => ({
+                    ...prev,
+                    nin: data.nin || data.NIN || prev.nin,
+                    firstName: data.firstName || data.firstname || prev.firstName,
+                    lastName: data.lastName || data.surname || prev.lastName,
+                    dateOfBirth: data.birthdate || data.dob || prev.dateOfBirth,
+                    ninData: data,
+                  }));
+                  toast.success("NIN verified and data auto-filled.");
+                } else {
+                  toast.error("Failed to fetch verified data.");
+                }
+              } catch {
+                toast.error("Error communicating with server.");
+              } finally {
+                setIsVerifyingNin(false);
+              }
+            },
+            onError: ({ message }: any) => {
+              toast.error(`Verification failed: ${message}`);
+              setIsVerifyingNin(false);
+            },
+            onClose: () => {
+              setIsVerifyingNin(false);
+            },
           }
-        },
-        onError: ({ message }: any) => {
-          toast.error(`Verification failed: ${message}`);
-          setIsVerifyingNin(false);
-        },
-        onClose: () => {
-          setIsVerifyingNin(false);
-        },
+        });
+      } else if (attempts < 20) {
+        attempts++;
+        setTimeout(tryLaunch, 200);
+      } else {
+        toast.error("KYC Widget failed to load. Please refresh the page and try again.");
+        setIsVerifyingNin(false);
       }
-    });
+    };
+
+    tryLaunch();
   };
 
   const update = (field: keyof FormData, value: string) => {
@@ -180,7 +190,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #eff6ff 50%, #fdf4ff 100%)" }}>
-      <Script src="https://kyc-verify-v2.netapps.ng/embed.js" strategy="lazyOnload" />
+      <Script src="https://kyc-verify-v2.netapps.ng/embed.js" strategy="afterInteractive" />
       <div className="flex-1 flex flex-col items-center justify-center py-12 px-4">
         <div className="w-full max-w-3xl">
 
