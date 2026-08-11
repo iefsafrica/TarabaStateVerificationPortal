@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import Script from "next/script";
 import { AlertCircle, CheckCircle2, ChevronRight, Loader2, BadgeCheck, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
@@ -58,6 +57,18 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState<FormData>(initialData);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Load KYC Widget script dynamically
+  useEffect(() => {
+    if (document.querySelector('script[src="https://kyc-verify-v2.netapps.ng/embed.js"]')) return;
+    const script = document.createElement("script");
+    script.src = "https://kyc-verify-v2.netapps.ng/embed.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      // leave script in DOM for reuse
+    };
+  }, []);
 
   // NIN Verification state
   const [ninVerified, setNinVerified] = useState(false);
@@ -190,7 +201,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #eff6ff 50%, #fdf4ff 100%)" }}>
-      <Script src="https://kyc-verify-v2.netapps.ng/embed.js" strategy="afterInteractive" />
       <div className="flex-1 flex flex-col items-center justify-center py-12 px-4">
         <div className="w-full max-w-3xl">
 
