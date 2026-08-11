@@ -13,7 +13,8 @@ import {
   Filter,
   SlidersHorizontal,
   ChevronDown,
-  Loader2
+  Loader2,
+  Settings
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -35,6 +36,19 @@ export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, pending: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredEmployees = employees.filter(emp => {
+    if (!searchQuery.trim()) return true;
+    const lowerQuery = searchQuery.toLowerCase();
+    return (
+      emp.firstName.toLowerCase().includes(lowerQuery) ||
+      emp.lastName.toLowerCase().includes(lowerQuery) ||
+      (emp.department && emp.department.toLowerCase().includes(lowerQuery)) ||
+      (emp.position && emp.position.toLowerCase().includes(lowerQuery)) ||
+      (emp.email && emp.email.toLowerCase().includes(lowerQuery))
+    );
+  });
 
   useEffect(() => {
     async function fetchData() {
@@ -162,6 +176,8 @@ export default function EmployeesPage() {
             <input 
               type="text" 
               placeholder="Search employees..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#00894F] focus:border-transparent text-sm"
             />
           </div>
@@ -195,6 +211,7 @@ export default function EmployeesPage() {
                 <th className="py-4 px-6 text-sm font-semibold text-gray-900">Status</th>
                 <th className="py-4 px-6 text-sm font-semibold text-gray-900">Join Date</th>
                 <th className="py-4 px-6 text-sm font-semibold text-gray-900">Uploaded Documents</th>
+                <th className="py-4 px-6 text-sm font-semibold text-gray-900 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -220,10 +237,13 @@ export default function EmployeesPage() {
                     <td className="py-5 px-6">
                       <div className="h-4 bg-gray-200 rounded-md w-32 animate-pulse"></div>
                     </td>
+                    <td className="py-5 px-6 text-right">
+                      <div className="h-8 bg-gray-200 rounded-md w-20 animate-pulse inline-block"></div>
+                    </td>
                   </tr>
                 ))
-              ) : employees.length > 0 ? (
-                employees.map((emp) => (
+              ) : filteredEmployees.length > 0 ? (
+                filteredEmployees.map((emp) => (
                   <tr key={emp.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-4 px-6 text-sm text-gray-900 font-medium">{emp.firstName} {emp.lastName}</td>
                     <td className="py-4 px-6 text-sm text-gray-500">{emp.department}</td>
@@ -239,11 +259,20 @@ export default function EmployeesPage() {
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-500">{new Date(emp.joinDate).toLocaleDateString()}</td>
                     <td className="py-4 px-6 text-sm text-gray-500">{emp.documentCount} docs</td>
+                    <td className="py-4 px-6 text-right">
+                      <Link 
+                        href={`/admin/employees/${emp.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md text-xs font-medium transition-colors border border-gray-200"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                        Manage
+                      </Link>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center">
+                  <td colSpan={7} className="py-16 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-400">
                       <Users className="h-10 w-10 mb-3 text-gray-300" />
                       <p className="text-gray-500 font-medium">No employees found</p>
