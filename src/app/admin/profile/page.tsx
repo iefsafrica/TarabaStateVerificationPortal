@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Mail, Phone, Shield, Building, Key, CheckCircle2, Lock, Save, Camera } from "lucide-react";
+import { User, Mail, Phone, Shield, Building, Key, CheckCircle2, Lock, Save, Camera, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ProfilePage() {
@@ -49,6 +49,10 @@ export default function ProfilePage() {
     };
     reader.readAsDataURL(file);
   };
+
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [passwords, setPasswords] = useState({
     currentPassword: "",
@@ -224,33 +228,60 @@ export default function ProfilePage() {
           <div className="space-y-4 max-w-lg">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Current Password</label>
-              <input
-                type="password"
-                value={passwords.currentPassword}
-                onChange={e => setPasswords({ ...passwords, currentPassword: e.target.value })}
-                placeholder="••••••••"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-              />
+              <div className="relative">
+                <input
+                  type={showCurrent ? "text" : "password"}
+                  value={passwords.currentPassword}
+                  onChange={e => setPasswords({ ...passwords, currentPassword: e.target.value })}
+                  placeholder="••••••••"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrent(!showCurrent)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">New Password</label>
-              <input
-                type="password"
-                value={passwords.newPassword}
-                onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
-                placeholder="••••••••"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-              />
+              <div className="relative">
+                <input
+                  type={showNew ? "text" : "password"}
+                  value={passwords.newPassword}
+                  onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
+                  placeholder="••••••••"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNew(!showNew)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Confirm New Password</label>
-              <input
-                type="password"
-                value={passwords.confirmPassword}
-                onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                placeholder="••••••••"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-              />
+              <div className="relative">
+                <input
+                  type={showConfirm ? "text" : "password"}
+                  value={passwords.confirmPassword}
+                  onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                  placeholder="••••••••"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </div>
           <div className="pt-4 flex justify-end">
