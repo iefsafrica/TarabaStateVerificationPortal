@@ -57,7 +57,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Verified Documents */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between h-44 relative">
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col h-full relative">
           <div className="flex justify-between items-start mb-6">
             <h3 className="text-gray-900 font-medium">Verified documents</h3>
             <div className="p-2.5 bg-[#e8f5f0] rounded-xl text-[#00894F]">
@@ -74,7 +74,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Pending Documents */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between h-44 relative">
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col h-full relative">
           <div className="flex justify-between items-start mb-6">
             <h3 className="text-gray-900 font-medium">Pending documents</h3>
             <div className="p-2.5 bg-orange-50 rounded-xl text-orange-500">
@@ -91,7 +91,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Rejected Documents */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between h-44 relative">
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col h-full relative">
           <div className="flex justify-between items-start mb-6">
             <h3 className="text-gray-900 font-medium">Rejected documents</h3>
             <div className="p-2.5 bg-red-50 rounded-xl text-red-500">
