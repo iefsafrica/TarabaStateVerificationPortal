@@ -6,6 +6,24 @@ import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
+// Helper component for standard inputs moved outside to prevent re-renders causing focus loss
+const InputGroup = ({ label, name, value, onChange, type = "text", placeholder, required = false }: any) => (
+  <div className="space-y-1.5">
+    <label className="text-sm font-medium text-gray-700">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      type={type}
+      name={name}
+      required={required}
+      value={value || ""}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] focus:border-transparent transition-colors"
+    />
+  </div>
+);
+
 export default function AddEmployeePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,24 +103,6 @@ export default function AddEmployeePage() {
     }
   };
 
-  // Helper component for standard inputs
-  const InputGroup = ({ label, name, type = "text", placeholder, required = false }: any) => (
-    <div className="space-y-1.5">
-      <label className="text-sm font-medium text-gray-700">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <input
-        type={type}
-        name={name}
-        required={required}
-        value={(formData as any)[name]}
-        onChange={handleChange}
-        placeholder={placeholder}
-        className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] focus:border-transparent transition-colors"
-      />
-    </div>
-  );
-
   return (
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in-up">
       <div className="flex items-center justify-between mb-8">
@@ -137,9 +137,9 @@ export default function AddEmployeePage() {
             <h2 className="text-base font-semibold text-gray-900">Personal Details</h2>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <InputGroup label="First Name" name="firstName" placeholder="Enter first name" required />
-            <InputGroup label="Surname" name="lastName" placeholder="Enter surname" required />
-            <InputGroup label="Middle Name" name="middleName" placeholder="Enter middle name" />
+            <InputGroup label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Enter first name" required />
+            <InputGroup label="Surname" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Enter surname" required />
+            <InputGroup label="Middle Name" name="middleName" value={formData.middleName} onChange={handleChange} placeholder="Enter middle name" />
             
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">Title <span className="text-red-500">*</span></label>
@@ -153,10 +153,10 @@ export default function AddEmployeePage() {
               </select>
             </div>
 
-            <InputGroup label="Email Address" name="email" type="email" placeholder="Enter email" required />
-            <InputGroup label="Telephone Number" name="telephone" placeholder="Enter phone number" required />
-            <InputGroup label="Birthdate" name="birthdate" type="date" required />
-            <InputGroup label="NIN" name="nin" placeholder="Enter NIN" required />
+            <InputGroup label="Email Address" name="email" value={formData.email} onChange={handleChange} type="email" placeholder="Enter email" required />
+            <InputGroup label="Telephone Number" name="telephone" value={formData.telephone} onChange={handleChange} placeholder="Enter phone number" required />
+            <InputGroup label="Birthdate" name="birthdate" value={formData.birthdate} onChange={handleChange} type="date" required />
+            <InputGroup label="NIN" name="nin" value={formData.nin} onChange={handleChange} placeholder="Enter NIN" required />
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">Gender <span className="text-red-500">*</span></label>
@@ -190,7 +190,7 @@ export default function AddEmployeePage() {
               </select>
             </div>
 
-            <InputGroup label="Position" name="position" placeholder="Enter position" required />
+            <InputGroup label="Position" name="position" value={formData.position} onChange={handleChange} placeholder="Enter position" required />
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">State of Origin <span className="text-red-500">*</span></label>
@@ -204,7 +204,7 @@ export default function AddEmployeePage() {
             </div>
             
             <div className="lg:col-span-2">
-              <InputGroup label="Residential Address" name="residentialAddress" placeholder="Enter residential address" required />
+              <InputGroup label="Residential Address" name="residentialAddress" value={formData.residentialAddress} onChange={handleChange} placeholder="Enter residential address" required />
             </div>
 
             <div className="space-y-1.5">
@@ -226,7 +226,7 @@ export default function AddEmployeePage() {
               </select>
             </div>
 
-            <InputGroup label="Profession" name="profession" placeholder="Enter profession" />
+            <InputGroup label="Profession" name="profession" value={formData.profession} onChange={handleChange} placeholder="Enter profession" />
           </div>
         </section>
 
@@ -236,11 +236,11 @@ export default function AddEmployeePage() {
             <h2 className="text-base font-semibold text-gray-900">Next of Kin</h2>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <InputGroup label="Next of Kin Name" name="nokName" placeholder="Enter next of kin name" required />
-            <InputGroup label="Relationship" name="nokRelationship" placeholder="Enter relationship" required />
-            <InputGroup label="Phone Number" name="nokPhone" placeholder="Enter next of kin phone number" required />
+            <InputGroup label="Next of Kin Name" name="nokName" value={formData.nokName} onChange={handleChange} placeholder="Enter next of kin name" required />
+            <InputGroup label="Relationship" name="nokRelationship" value={formData.nokRelationship} onChange={handleChange} placeholder="Enter relationship" required />
+            <InputGroup label="Phone Number" name="nokPhone" value={formData.nokPhone} onChange={handleChange} placeholder="Enter next of kin phone number" required />
             <div className="lg:col-span-3">
-              <InputGroup label="Address" name="nokAddress" placeholder="Enter next of kin address" required />
+              <InputGroup label="Address" name="nokAddress" value={formData.nokAddress} onChange={handleChange} placeholder="Enter next of kin address" required />
             </div>
           </div>
         </section>
@@ -251,9 +251,9 @@ export default function AddEmployeePage() {
             <h2 className="text-base font-semibold text-gray-900">Employment Record</h2>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <InputGroup label="Employment ID No" name="employmentId" placeholder="Enter employment ID number" required />
-            <InputGroup label="Service No" name="serviceNo" placeholder="Enter service number" />
-            <InputGroup label="File No" name="fileNo" placeholder="Enter file number" />
+            <InputGroup label="Employment ID No" name="employmentId" value={formData.employmentId} onChange={handleChange} placeholder="Enter employment ID number" required />
+            <InputGroup label="Service No" name="serviceNo" value={formData.serviceNo} onChange={handleChange} placeholder="Enter service number" />
+            <InputGroup label="File No" name="fileNo" value={formData.fileNo} onChange={handleChange} placeholder="Enter file number" />
             
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">Rank/Position <span className="text-red-500">*</span></label>
@@ -266,7 +266,7 @@ export default function AddEmployeePage() {
               </select>
             </div>
             
-            <InputGroup label="Organization" name="organization" placeholder="Enter organization" required />
+            <InputGroup label="Organization" name="organization" value={formData.organization} onChange={handleChange} placeholder="Enter organization" required />
             
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">Employment Type <span className="text-red-500">*</span></label>
@@ -296,8 +296,8 @@ export default function AddEmployeePage() {
             <h2 className="text-base font-semibold text-gray-900">Employment Details</h2>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <InputGroup label="Work Location" name="workLocation" placeholder="Enter work location" required />
-            <InputGroup label="Date of First Appointment" name="dateOfFirstAppointment" type="date" required />
+            <InputGroup label="Work Location" name="workLocation" value={formData.workLocation} onChange={handleChange} placeholder="Enter work location" required />
+            <InputGroup label="Date of First Appointment" name="dateOfFirstAppointment" value={formData.dateOfFirstAppointment} onChange={handleChange} type="date" required />
             
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">Salary Structure <span className="text-red-500">*</span></label>
@@ -355,8 +355,8 @@ export default function AddEmployeePage() {
               </select>
             </div>
 
-            <InputGroup label="Account Number" name="accountNumber" placeholder="Enter account number" required />
-            <InputGroup label="NUBAN Account Number" name="nuban" placeholder="Enter NUBAN account number" />
+            <InputGroup label="Account Number" name="accountNumber" value={formData.accountNumber} onChange={handleChange} placeholder="Enter account number" required />
+            <InputGroup label="NUBAN Account Number" name="nuban" value={formData.nuban} onChange={handleChange} placeholder="Enter NUBAN account number" />
             
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">PFA Name <span className="text-red-500">*</span></label>
@@ -368,7 +368,7 @@ export default function AddEmployeePage() {
               </select>
             </div>
 
-            <InputGroup label="RSA PIN" name="rsaPin" placeholder="Enter RSA PIN" required />
+            <InputGroup label="RSA PIN" name="rsaPin" value={formData.rsaPin} onChange={handleChange} placeholder="Enter RSA PIN" required />
           </div>
         </section>
 
