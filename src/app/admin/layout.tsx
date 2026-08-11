@@ -38,6 +38,28 @@ export default function AdminLayout({
     setOpenMenus(prev => ({ ...prev, [name]: !prev[name] }));
   };
 
+  const [userProfile, setUserProfile] = useState({
+    fullName: "Admin User",
+    email: "info@tarabastate.gov",
+    role: "Administrator",
+  });
+
+  const loadUserProfile = () => {
+    const saved = localStorage.getItem("admin_user_profile");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setUserProfile({
+          fullName: parsed.fullName || "Admin User",
+          email: parsed.email || "info@tarabastate.gov",
+          role: parsed.role || "Administrator",
+        });
+      } catch {
+        // ignore parse error
+      }
+    }
+  };
+
   useEffect(() => {
     // Check if session is active
     const session = localStorage.getItem("admin_session");
@@ -45,6 +67,12 @@ export default function AdminLayout({
       toast.error("Please login to access the dashboard.");
       router.push("/auth/login");
     }
+
+    loadUserProfile();
+
+    const handleProfileUpdate = () => loadUserProfile();
+    window.addEventListener("admin_profile_updated", handleProfileUpdate);
+    return () => window.removeEventListener("admin_profile_updated", handleProfileUpdate);
   }, [router]);
 
   const handleLogout = () => {
@@ -285,12 +313,12 @@ export default function AdminLayout({
                 className="flex items-center gap-3 ml-2 border-l border-gray-100 pl-6 cursor-pointer"
                 onClick={() => { setIsDropdownOpen(!isDropdownOpen); setIsNotificationsOpen(false); }}
               >
-                <div className="h-9 w-9 rounded-full bg-green-700 text-white flex items-center justify-center font-semibold text-sm shadow-sm">
-                  AU
+                <div className="h-9 w-9 rounded-full bg-green-700 text-white flex items-center justify-center font-semibold text-sm shadow-sm uppercase">
+                  {userProfile.fullName.split(" ").map(n => n[0]).join("").slice(0, 2) || "AU"}
                 </div>
                 <div className="hidden sm:block text-sm">
-                  <p className="font-semibold text-gray-900 leading-tight">Admin User</p>
-                  <p className="text-xs text-gray-500">Administrator</p>
+                  <p className="font-semibold text-gray-900 leading-tight">{userProfile.fullName}</p>
+                  <p className="text-xs text-gray-500">{userProfile.role}</p>
                 </div>
                 <ChevronDown className={`h-4 w-4 text-gray-400 ml-1 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
               </div>
@@ -300,7 +328,7 @@ export default function AdminLayout({
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-50 animate-fade-in-up">
                   <div className="px-4 py-2 border-b border-gray-50">
                     <p className="text-xs font-medium text-gray-400">Signed in as</p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">info@tarabastate.gov</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{userProfile.email}</p>
                   </div>
                   <Link 
                     href="/admin/profile" 

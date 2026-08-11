@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, Mail, Phone, Shield, Building, Key, CheckCircle2, Lock, Save, Camera } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,6 +16,18 @@ export default function ProfilePage() {
     bio: "Super administrator managing Taraba State Verification Portal.",
   });
 
+  // Load profile from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("admin_user_profile");
+    if (saved) {
+      try {
+        setProfile(JSON.parse(saved));
+      } catch {
+        // ignore parse error
+      }
+    }
+  }, []);
+
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
@@ -24,6 +36,8 @@ export default function ProfilePage() {
 
   const handleProfileSave = (e: React.FormEvent) => {
     e.preventDefault();
+    localStorage.setItem("admin_user_profile", JSON.stringify(profile));
+    window.dispatchEvent(new Event("admin_profile_updated"));
     toast.success("Profile details updated successfully!");
   };
 
