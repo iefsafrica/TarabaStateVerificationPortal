@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { User, Lock, Eye, EyeOff, Info, Copy } from "lucide-react";
@@ -8,6 +9,22 @@ import { User, Lock, Eye, EyeOff, Info, Copy } from "lucide-react";
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  const handleLogin = (e: FormEvent) => {
+    e.preventDefault();
+    setError("");
+    
+    // Client-side demo logic as requested
+    if (username === "info@tarabastate.gov" && password === "Admin@webmaster$1") {
+      router.push("/admin/dashboard");
+    } else {
+      setError("Invalid credentials. Try the demo credentials.");
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gray-50 p-4">
@@ -31,7 +48,7 @@ export default function LoginPage() {
 
         {/* Card Form */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <form className="p-6 sm:p-8 space-y-6 relative" onSubmit={(e) => e.preventDefault()}>
+          <form className="p-6 sm:p-8 space-y-6 relative" onSubmit={handleLogin}>
             
             {/* Toggle Demo Credentials */}
             <button 
@@ -55,14 +72,24 @@ export default function LoginPage() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <div className="text-sm text-blue-700"><span className="font-medium">Username:</span> admin</div>
-                    <button className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-100 transition-colors" type="button" title="Copy username">
+                    <div className="text-sm text-blue-700"><span className="font-medium">Username:</span> info@tarabastate.gov</div>
+                    <button 
+                      className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-100 transition-colors" 
+                      type="button" 
+                      title="Copy username"
+                      onClick={() => setUsername("info@tarabastate.gov")}
+                    >
                       <Copy className="h-3.5 w-3.5" />
                     </button>
                   </div>
                   <div className="flex justify-between items-center">
-                    <div className="text-sm text-blue-700"><span className="font-medium">Password:</span> admin123</div>
-                    <button className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-100 transition-colors" type="button" title="Copy password">
+                    <div className="text-sm text-blue-700"><span className="font-medium">Password:</span> Admin@webmaster$1</div>
+                    <button 
+                      className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-100 transition-colors" 
+                      type="button" 
+                      title="Copy password"
+                      onClick={() => setPassword("Admin@webmaster$1")}
+                    >
                       <Copy className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -71,17 +98,26 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm text-center">
+                {error}
+              </div>
+            )}
+
             {/* Username Input */}
             <div className="space-y-2">
               <label htmlFor="username" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <User className="h-4 w-4 text-primary" /> Username
+                <User className="h-4 w-4 text-primary" /> Username / Email
               </label>
               <div className="relative">
                 <input 
                   type="text" 
                   id="username" 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm" 
-                  placeholder="Enter your username" 
+                  placeholder="info@tarabastate.gov" 
                   required 
                 />
               </div>
@@ -96,6 +132,8 @@ export default function LoginPage() {
                 <input 
                   type={showPassword ? "text" : "password"}
                   id="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 pr-10 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm" 
                   placeholder="Enter your password" 
                   required 
