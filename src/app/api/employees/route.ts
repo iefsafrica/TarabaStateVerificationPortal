@@ -103,7 +103,16 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ success: true, data: newEmployee });
+    await prisma.activity.create({
+      data: {
+        title: "New Employee Added",
+        description: `${newEmployee.firstName} ${newEmployee.lastName} was added to ${newEmployee.department} department.`,
+        type: "Employee",
+        status: "Pending",
+      },
+    });
+
+    return NextResponse.json({ success: true, data: newEmployee }, { status: 201 });
   } catch (error) {
     console.error("Error creating employee:", error);
     return NextResponse.json(

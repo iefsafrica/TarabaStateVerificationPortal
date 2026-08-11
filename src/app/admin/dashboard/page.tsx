@@ -15,6 +15,15 @@ type Employee = {
   joinDate: string;
 };
 
+type Activity = {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  createdAt: string;
+};
+
 type DashboardData = {
   documents: {
     total: number;
@@ -24,6 +33,8 @@ type DashboardData = {
   };
   recentEmployees: Employee[];
   pendingEmployees: Employee[];
+  recentActivities: Activity[];
+  pendingActivities: Activity[];
 };
 
 export default function DashboardPage() {
@@ -49,6 +60,7 @@ export default function DashboardPage() {
   }, []);
 
   const displayedEmployees = activeTab === "Recent" ? data?.recentEmployees : data?.pendingEmployees;
+  const displayedActivities = activeTab === "Recent" ? data?.recentActivities : data?.pendingActivities;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-fade-in-up pb-10">
@@ -224,8 +236,33 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-red-600 text-sm">
-          Failed to load activities: Network Error
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden divide-y divide-gray-50">
+          {isLoading ? (
+             <div className="py-12 text-center">
+               <Loader2 className="h-8 w-8 animate-spin text-[#00894F] mx-auto" />
+             </div>
+          ) : displayedActivities && displayedActivities.length > 0 ? (
+            displayedActivities.map((activity) => (
+              <div key={activity.id} className="p-4 hover:bg-gray-50/50 transition-colors flex gap-4">
+                <div className={`mt-1 flex-shrink-0 w-2 h-2 rounded-full ${
+                  activity.status === 'Success' ? 'bg-green-500' :
+                  activity.status === 'Pending' ? 'bg-orange-500' :
+                  'bg-red-500'
+                }`} />
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900">{activity.title}</h4>
+                  <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    {new Date(activity.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-8 text-center text-gray-500 text-sm">
+               No {activeTab.toLowerCase()} activities found.
+            </div>
+          )}
         </div>
       </div>
 

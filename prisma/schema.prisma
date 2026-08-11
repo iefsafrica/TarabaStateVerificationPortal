@@ -96,3 +96,12 @@ model Document {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Activity {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  type        String   @default("System") // "Employee", "System", "Document"
+  status      String   @default("Success") // "Success", "Pending", "Failed"
+  createdAt   DateTime @default(now())
+}

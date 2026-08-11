@@ -22,6 +22,19 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
+    // Recent Activities (limit 5)
+    const recentActivities = await prisma.activity.findMany({
+      take: 5,
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Pending Activities (limit 5)
+    const pendingActivities = await prisma.activity.findMany({
+      where: { status: "Pending" },
+      take: 5,
+      orderBy: { createdAt: "desc" },
+    });
+
     return NextResponse.json({
       success: true,
       data: {
@@ -33,6 +46,8 @@ export async function GET() {
         },
         recentEmployees,
         pendingEmployees,
+        recentActivities,
+        pendingActivities,
       },
     });
   } catch (error) {

@@ -51,6 +51,27 @@ export async function PATCH(
       data: updateData,
     });
 
+    // If status was updated to Active, log an approval activity
+    if (updateData.status === "Active") {
+      await prisma.activity.create({
+        data: {
+          title: "Employee Approved",
+          description: `${employee.firstName} ${employee.lastName}'s account was approved and is now active.`,
+          type: "Employee",
+          status: "Success",
+        },
+      });
+    } else if (Object.keys(updateData).length > 0) {
+       await prisma.activity.create({
+        data: {
+          title: "Employee Profile Updated",
+          description: `${employee.firstName} ${employee.lastName}'s profile was updated.`,
+          type: "Employee",
+          status: "Success",
+        },
+      });
+    }
+
     return NextResponse.json({ success: true, data: employee });
   } catch (error) {
     console.error("Error updating employee:", error);
