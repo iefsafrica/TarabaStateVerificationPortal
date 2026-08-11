@@ -14,6 +14,7 @@ import {
   Filter,
   Loader2,
   Trash2,
+  Edit2,
   FolderTree,
   FolderMinus,
   Sparkles
@@ -63,6 +64,13 @@ export default function FileManagerPage() {
   const [newFolderName, setNewFolderName] = useState("");
   const [newFolderScope, setNewFolderScope] = useState("Global");
   const [newFolderParentId, setNewFolderParentId] = useState("");
+
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+  const [editFolderName, setEditFolderName] = useState("");
+  const [editFolderScope, setEditFolderScope] = useState("");
+
+  const [editingFileId, setEditingFileId] = useState<string | null>(null);
+  const [editFileName, setEditFileName] = useState("");
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -149,6 +157,74 @@ export default function FileManagerPage() {
       }
     } catch (error) {
       toast.error("An error occurred");
+    }
+  };
+
+  const handleUpdateFolder = async (id: string) => {
+    if (!editFolderName) return toast.error("Folder name is required");
+    try {
+      const res = await fetch(`/api/file-manager/folders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editFolderName, scope: editFolderScope })
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success("Folder updated!");
+        setEditingFolderId(null);
+        fetchFolders();
+      } else toast.error(json.error || "Update failed");
+    } catch (e) {
+      toast.error("Error updating folder");
+    }
+  };
+
+  const handleDeleteFolder = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this folder and all its contents?")) return;
+    try {
+      const res = await fetch(`/api/file-manager/folders/${id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (json.success) {
+        toast.success("Folder deleted");
+        fetchFolders();
+        fetchDashboard();
+      } else toast.error(json.error || "Delete failed");
+    } catch (e) {
+      toast.error("Error deleting folder");
+    }
+  };
+
+  const handleUpdateFile = async (id: string) => {
+    if (!editFileName) return toast.error("File name is required");
+    try {
+      const res = await fetch(`/api/file-manager/files/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editFileName })
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success("File updated!");
+        setEditingFileId(null);
+        fetchFiles();
+      } else toast.error(json.error || "Update failed");
+    } catch (e) {
+      toast.error("Error updating file");
+    }
+  };
+
+  const handleDeleteFile = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this file?")) return;
+    try {
+      const res = await fetch(`/api/file-manager/files/${id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (json.success) {
+        toast.success("File deleted");
+        fetchFiles();
+        fetchDashboard();
+      } else toast.error(json.error || "Delete failed");
+    } catch (e) {
+      toast.error("Error deleting file");
     }
   };
 
@@ -350,9 +426,21 @@ export default function FileManagerPage() {
                 ) : (
                   folders.map(folder => (
                     <tr key={folder.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-4 font-medium text-slate-900 flex items-center gap-3">
-                        <FolderOpen className="h-4 w-4 text-slate-400" />
-                        {folder.name}
+                      <td className="px-6 py-4 font-medium text-slate-900">
+                        {editingFolderId === folder.id ? (
+                          <input 
+                            type="text"
+                            value={editFolderName}
+                            onChange={(e) => setEditFolderName(e.target.value)}
+                            className="px-2 py-1 border border-slate-300 rounded text-sm w-full focus:outline-none focus:border-green-500"
+                            autoFocus
+                          />
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <FolderOpen className="h-4 w-4 text-slate-400" />
+                            {folder.name}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-xs font-mono text-slate-400">{folder.id.split('-')[0]}</td>
                       <td className="px-6 py-4">
@@ -364,14 +452,44 @@ export default function FileManagerPage() {
                       </td>
                       <td className="px-6 py-4 text-slate-500">{new Date(folder.createdAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4">
-                        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium border border-slate-200">
-                          {folder.scope}
-                        </span>
+                        {editingFolderId === folder.id ? (
+                          <select 
+                            value={editFolderScope}
+                            onChange={(e) => setEditFolderScope(e.target.value)}
+                            className="px-2 py-1 border border-slate-300 rounded text-sm bg-white focus:outline-none focus:border-green-500"
+                          >
+                            <option value="Global">Global</option>
+                            <option value="Restricted">Restricted</option>
+                          </select>
+                        ) : (
+                          <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium border border-slate-200">
+                            {folder.scope}
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="text-slate-400 hover:text-red-500 transition-colors">
-                          <Trash2 className="h-4 w-4 ml-auto" />
-                        </button>
+                        {editingFolderId === folder.id ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <button onClick={() => handleUpdateFolder(folder.id)} className="text-green-600 hover:text-green-700 text-sm font-medium">Save</button>
+                            <button onClick={() => setEditingFolderId(null)} className="text-slate-400 hover:text-slate-600 text-sm">Cancel</button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => {
+                                setEditingFolderId(folder.id);
+                                setEditFolderName(folder.name);
+                                setEditFolderScope(folder.scope);
+                              }}
+                              className="text-slate-400 hover:text-blue-500 transition-colors"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </button>
+                            <button onClick={() => handleDeleteFolder(folder.id)} className="text-slate-400 hover:text-red-500 transition-colors">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -516,11 +634,23 @@ export default function FileManagerPage() {
                 ) : (
                   files.map(file => (
                     <tr key={file.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-4 font-medium text-slate-900 flex items-center gap-3">
-                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                          <File className="h-4 w-4" />
-                        </div>
-                        {file.name}
+                      <td className="px-6 py-4 font-medium text-slate-900">
+                        {editingFileId === file.id ? (
+                          <input 
+                            type="text"
+                            value={editFileName}
+                            onChange={(e) => setEditFileName(e.target.value)}
+                            className="px-2 py-1 border border-slate-300 rounded text-sm w-full focus:outline-none focus:border-green-500"
+                            autoFocus
+                          />
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                              <File className="h-4 w-4" />
+                            </div>
+                            {file.name}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-slate-500">{formatBytes(file.size)}</td>
                       <td className="px-6 py-4 text-slate-500 uppercase">{file.type}</td>
@@ -530,9 +660,27 @@ export default function FileManagerPage() {
                       </td>
                       <td className="px-6 py-4 text-slate-500">{new Date(file.createdAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4 text-right">
-                        <button className="text-slate-400 hover:text-red-500 transition-colors">
-                          <Trash2 className="h-4 w-4 ml-auto" />
-                        </button>
+                        {editingFileId === file.id ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <button onClick={() => handleUpdateFile(file.id)} className="text-green-600 hover:text-green-700 text-sm font-medium">Save</button>
+                            <button onClick={() => setEditingFileId(null)} className="text-slate-400 hover:text-slate-600 text-sm">Cancel</button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => {
+                                setEditingFileId(file.id);
+                                setEditFileName(file.name);
+                              }}
+                              className="text-slate-400 hover:text-blue-500 transition-colors"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </button>
+                            <button onClick={() => handleDeleteFile(file.id)} className="text-slate-400 hover:text-red-500 transition-colors">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))
