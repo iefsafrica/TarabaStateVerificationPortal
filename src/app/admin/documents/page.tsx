@@ -11,6 +11,7 @@ import {
   FileArchive,
   Trash2,
   Edit2,
+  Eye,
   Loader2
 } from "lucide-react";
 import { toast } from "sonner";
@@ -116,10 +117,13 @@ export default function OfficialDocumentsPage() {
         return;
       }
 
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folderId", folderId);
+
       fetch("/api/file-manager/files", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, size, type, folderId })
+        body: formData
       }).then(res => res.json()).then(json => {
         if (json.success) {
           toast.success("Document uploaded!");
@@ -294,6 +298,19 @@ export default function OfficialDocumentsPage() {
                         </div>
                       ) : (
                         <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => {
+                              if (file.url) {
+                                window.open(file.url, "_blank");
+                              } else {
+                                toast.error("No preview available");
+                              }
+                            }}
+                            className="text-slate-400 hover:text-green-500 transition-colors"
+                            title="View Document"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
                           <button 
                             onClick={() => {
                               setEditingFileId(file.id);
