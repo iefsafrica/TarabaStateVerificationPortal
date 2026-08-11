@@ -14,6 +14,7 @@ export default function ProfilePage() {
     role: "Administrator",
     department: "System Administration",
     bio: "Super administrator managing Taraba State Verification Portal.",
+    avatar: "",
   });
 
   // Load profile from localStorage on mount
@@ -21,12 +22,33 @@ export default function ProfilePage() {
     const saved = localStorage.getItem("admin_user_profile");
     if (saved) {
       try {
-        setProfile(JSON.parse(saved));
+        setProfile(prev => ({ ...prev, ...JSON.parse(saved) }));
       } catch {
         // ignore parse error
       }
     }
   }, []);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image size must be under 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      const updated = { ...profile, avatar: base64 };
+      setProfile(updated);
+      localStorage.setItem("admin_user_profile", JSON.stringify(updated));
+      window.dispatchEvent(new Event("admin_profile_updated"));
+      toast.success("Profile picture updated!");
+    };
+    reader.readAsDataURL(file);
+  };
 
   const [passwords, setPasswords] = useState({
     currentPassword: "",
@@ -63,13 +85,28 @@ export default function ProfilePage() {
     <div className="p-8 max-w-4xl mx-auto space-y-8 pb-24">
       {/* Profile Header */}
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex flex-col sm:flex-row items-center gap-6">
-        <div className="relative">
-          <div className="h-24 w-24 rounded-full bg-green-700 text-white flex items-center justify-center font-bold text-3xl shadow-md">
-            AU
-          </div>
-          <button className="absolute bottom-0 right-0 p-2 bg-slate-900 text-white rounded-full hover:bg-slate-800 transition-colors shadow">
+        <div className="relative group">
+          {profile.avatar ? (
+            /* eslint-disable-next-html-element-warnings, @next/next/no-img-element */
+            <img
+              src={profile.avatar}
+              alt="Profile"
+              className="h-24 w-24 rounded-full object-cover shadow-md border-2 border-green-700"
+            />
+          ) : (
+            <div className="h-24 w-24 rounded-full bg-green-700 text-white flex items-center justify-center font-bold text-3xl shadow-md uppercase">
+              {profile.fullName.split(" ").map(n => n[0]).join("").slice(0, 2) || "AU"}
+            </div>
+          )}
+          <label className="absolute bottom-0 right-0 p-2.5 bg-slate-900 text-white rounded-full hover:bg-green-700 transition-colors shadow cursor-pointer">
             <Camera className="h-4 w-4" />
-          </button>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageUpload}
+            />
+          </label>
         </div>
         <div className="text-center sm:text-left flex-1">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

@@ -42,6 +42,7 @@ export default function AdminLayout({
     fullName: "Admin User",
     email: "info@tarabastate.gov",
     role: "Administrator",
+    avatar: "",
   });
 
   const loadUserProfile = () => {
@@ -53,6 +54,7 @@ export default function AdminLayout({
           fullName: parsed.fullName || "Admin User",
           email: parsed.email || "info@tarabastate.gov",
           role: parsed.role || "Administrator",
+          avatar: parsed.avatar || "",
         });
       } catch {
         // ignore parse error
@@ -313,9 +315,18 @@ export default function AdminLayout({
                 className="flex items-center gap-3 ml-2 border-l border-gray-100 pl-6 cursor-pointer"
                 onClick={() => { setIsDropdownOpen(!isDropdownOpen); setIsNotificationsOpen(false); }}
               >
-                <div className="h-9 w-9 rounded-full bg-green-700 text-white flex items-center justify-center font-semibold text-sm shadow-sm uppercase">
-                  {userProfile.fullName.split(" ").map(n => n[0]).join("").slice(0, 2) || "AU"}
-                </div>
+                {userProfile.avatar ? (
+                  /* eslint-disable-next-html-element-warnings, @next/next/no-img-element */
+                  <img
+                    src={userProfile.avatar}
+                    alt="Avatar"
+                    className="h-9 w-9 rounded-full object-cover shadow-sm border border-green-700"
+                  />
+                ) : (
+                  <div className="h-9 w-9 rounded-full bg-green-700 text-white flex items-center justify-center font-semibold text-sm shadow-sm uppercase">
+                    {userProfile.fullName.split(" ").map(n => n[0]).join("").slice(0, 2) || "AU"}
+                  </div>
+                )}
                 <div className="hidden sm:block text-sm">
                   <p className="font-semibold text-gray-900 leading-tight">{userProfile.fullName}</p>
                   <p className="text-xs text-gray-500">{userProfile.role}</p>
