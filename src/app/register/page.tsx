@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { AlertCircle, CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
+import Script from "next/script";
+import { AlertCircle, CheckCircle2, ChevronRight, Loader2, BadgeCheck, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 const steps = [
@@ -30,6 +31,7 @@ type FormData = {
   dateOfEmployment: string;
   grade: string;
   documents: File[];
+  ninData?: Record<string, string>;
 };
 
 const initialData: FormData = {
@@ -57,6 +59,68 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // NIN Verification state
+  const [ninVerified, setNinVerified] = useState(false);
+  const [isVerifyingNin, setIsVerifyingNin] = useState(false);
+  const userRef = useState(`reg-${Date.now()}`)[0];
+
+  const handleVerifyNin = () => {
+    if (!formData.nin || formData.nin.length !== 11) {
+      toast.error("Please enter your 11-digit NIN before verifying.");
+      return;
+    }
+
+    if (!(window as any).KycWidget) {
+      toast.error("KYC Widget not loaded yet. Please try again.");
+      return;
+    }
+
+    setIsVerifyingNin(true);
+    (window as any).KycWidget.init({
+      publicKey: process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e",
+      userRef,
+      slug: "ippis_nin_verification",
+      name: formData.firstName ? `${formData.firstName} ${formData.lastName}`.trim() : "Applicant",
+      levelSlug: "tier_1",
+      display: "modal",
+      environment: "live",
+      callbacks: {
+        onSuccess: async () => {
+          toast.success("Verification successful! Fetching data...");
+          try {
+            const res = await fetch(`/api/kyc-status?userRef=${userRef}&slug=ippis_nin_verification`);
+            const data = await res.json();
+            if (data && !data.error) {
+              setNinVerified(true);
+              setFormData(prev => ({
+                ...prev,
+                nin: data.nin || data.NIN || prev.nin,
+                firstName: data.firstName || data.firstname || prev.firstName,
+                lastName: data.lastName || data.surname || prev.lastName,
+                dateOfBirth: data.birthdate || data.dob || prev.dateOfBirth,
+                ninData: data,
+              }));
+              toast.success("NIN verified and data auto-filled.");
+            } else {
+              toast.error("Failed to fetch verified data.");
+            }
+          } catch {
+            toast.error("Error communicating with server.");
+          } finally {
+            setIsVerifyingNin(false);
+          }
+        },
+        onError: ({ message }: any) => {
+          toast.error(`Verification failed: ${message}`);
+          setIsVerifyingNin(false);
+        },
+        onClose: () => {
+          setIsVerifyingNin(false);
+        },
+      }
+    });
+  };
+
   const update = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -65,6 +129,7 @@ export default function RegisterPage() {
     if (currentStep === 1) {
       if (!formData.bvn || formData.bvn.length !== 11) { toast.error("Please enter a valid 11-digit BVN"); return false; }
       if (!formData.nin || formData.nin.length !== 11) { toast.error("Please enter a valid 11-digit NIN"); return false; }
+      if (!ninVerified) { toast.error("Please verify your NIN before continuing."); return false; }
     }
     if (currentStep === 2) {
       if (!formData.firstName.trim()) { toast.error("First name is required"); return false; }
@@ -115,6 +180,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #eff6ff 50%, #fdf4ff 100%)" }}>
+      <Script src="https://kyc-verify-v2.netapps.ng/embed.js" strategy="lazyOnload" />
       <div className="flex-1 flex flex-col items-center justify-center py-12 px-4">
         <div className="w-full max-w-3xl">
 
@@ -169,14 +235,49 @@ export default function RegisterPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-slate-800 mb-2">National Identification Number (NIN)</label>
-                    <input
-                      type="text"
-                      maxLength={11}
-                      value={formData.nin}
-                      onChange={e => update("nin", e.target.value.replace(/\D/g, ""))}
-                      placeholder="Enter your 11-digit NIN"
-                      className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all"
-                    />
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          maxLength={11}
+                          value={formData.nin}
+                          onChange={e => update("nin", e.target.value.replace(/\D/g, ""))}
+                          placeholder="Enter your 11-digit NIN"
+                          readOnly={ninVerified}
+                          className={`w-full border rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 transition-all pr-10 ${
+                            ninVerified
+                              ? "border-green-400 bg-green-50 text-green-800 focus:ring-green-500/20 focus:border-green-500"
+                              : "border-slate-200 focus:ring-green-500/20 focus:border-green-500"
+                          }`}
+                        />
+                        {ninVerified && (
+                          <BadgeCheck className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-600" />
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleVerifyNin}
+                        disabled={isVerifyingNin || ninVerified || formData.nin.length !== 11}
+                        className={`shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all ${
+                          ninVerified
+                            ? "bg-green-100 text-green-700 cursor-default border border-green-300"
+                            : "bg-green-700 text-white hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                        }`}
+                      >
+                        {isVerifyingNin ? (
+                          <><Loader2 className="h-4 w-4 animate-spin" /> Verifying...</>
+                        ) : ninVerified ? (
+                          <><ShieldCheck className="h-4 w-4" /> Verified</>
+                        ) : (
+                          "Verify NIN"
+                        )}
+                      </button>
+                    </div>
+                    {ninVerified && (
+                      <p className="text-xs text-green-600 mt-1.5 font-medium flex items-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> NIN verified successfully. Your details have been auto-filled.
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="mt-4 flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm">
