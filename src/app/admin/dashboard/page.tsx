@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FileCheck, FileClock, FileX, Users, ArrowUpRight, Loader2 } from "lucide-react";
+import { FileCheck, FileClock, FileX, Users, ArrowUpRight, Loader2, Activity } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -194,6 +194,38 @@ export default function DashboardPage() {
               View all employees →
             </Link>
           </div>
+        </div>
+      </div>
+
+      {/* Recent Activities Section */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Activity className="h-5 w-5 text-gray-700" />
+              <h2 className="text-xl font-bold text-gray-900">Recent activities</h2>
+            </div>
+            <p className="text-sm text-gray-600">Track the latest system events and approvals.</p>
+          </div>
+          
+          <div className="flex items-center gap-2 bg-gray-50/50 p-1 rounded-xl w-fit border border-gray-100">
+            {["Recent", "Pending"].map((tab) => (
+              <button
+                key={tab}
+                className={`px-6 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  tab === "Recent"
+                    ? "bg-white text-gray-900 shadow-sm border border-gray-200"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-red-600 text-sm">
+          Failed to load activities: Network Error
         </div>
       </div>
 
