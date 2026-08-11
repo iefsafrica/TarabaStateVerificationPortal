@@ -109,7 +109,7 @@ export default function AdminLayout({
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
-            const hasSubmenu = !!item.subItems || item.hasSubmenu;
+            const hasSubmenu = !!item.subItems;
             const isMenuOpen = openMenus[item.name];
             const isActive = pathname === item.href || (item.subItems && item.subItems.some(sub => pathname === sub.href));
 
