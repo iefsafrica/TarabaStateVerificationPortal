@@ -22,7 +22,12 @@ export async function GET(request: Request) {
       });
     } else if (email) {
       registration = await (prisma.registration as any).findFirst({
-        where: { email: email.trim().toLowerCase() },
+        where: {
+          email: {
+            equals: email.trim(),
+            mode: "insensitive",
+          },
+        },
         orderBy: { createdAt: "desc" }
       });
     }

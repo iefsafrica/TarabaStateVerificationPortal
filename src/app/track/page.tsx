@@ -75,7 +75,9 @@ export default function TrackPage() {
         setResult(json.data);
       } else {
         setNotFound(true);
-        toast.error(json.error || "No registration found.");
+        if (res.status !== 404) {
+          toast.error(json.error || "Failed to track registration.");
+        }
       }
     } catch {
       toast.error("Error connecting to server. Please try again.");
