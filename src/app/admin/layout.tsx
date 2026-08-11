@@ -26,6 +26,13 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
+    "Employees List": true // Open by default if we want, or handle dynamically
+  });
+
+  const toggleMenu = (name: string) => {
+    setOpenMenus(prev => ({ ...prev, [name]: !prev[name] }));
+  };
 
   useEffect(() => {
     // Check if session is active
@@ -44,7 +51,13 @@ export default function AdminLayout({
 
   const navItems = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-    { name: "Employees List", href: "/admin/employees", icon: Users, hasSubmenu: true },
+    { 
+      name: "Employees List", 
+      icon: Users, 
+      subItems: [
+        { name: "Employee", href: "/admin/employees" }
+      ]
+    },
     { name: "File Manager", href: "/admin/files", icon: FolderOpen, hasSubmenu: true },
     { name: "Roles", href: "/admin/roles", icon: Shield },
     { name: "Permissions", href: "/admin/permissions", icon: Key },
@@ -72,27 +85,66 @@ export default function AdminLayout({
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const hasSubmenu = !!item.subItems || item.hasSubmenu;
+            const isMenuOpen = openMenus[item.name];
+            const isActive = pathname === item.href || (item.subItems && item.subItems.some(sub => pathname === sub.href));
+
             return (
-              <Link 
-                key={item.name} 
-                href={item.href}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors group ${
-                  isActive 
-                    ? "bg-[#EDF7F2] text-green-800 font-medium" 
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <item.icon className={`h-4 w-4 ${isActive ? "text-green-700" : "text-gray-400 group-hover:text-gray-600"}`} />
-                  <span className="text-sm">{item.name}</span>
-                </div>
-                {item.hasSubmenu && (
-                  <ChevronDown className={`h-4 w-4 ${isActive ? "text-green-700" : "text-gray-400"}`} />
+              <div key={item.name} className="space-y-1">
+                {item.href ? (
+                  <Link 
+                    href={item.href}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors group ${
+                      pathname === item.href 
+                        ? "bg-[#EDF7F2] text-green-800 font-medium" 
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon className={`h-4 w-4 ${pathname === item.href ? "text-green-700" : "text-gray-400 group-hover:text-gray-600"}`} />
+                      <span className="text-sm">{item.name}</span>
+                    </div>
+                  </Link>
+                ) : (
+                  <button 
+                    onClick={() => toggleMenu(item.name)}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors group ${
+                      isActive 
+                        ? "bg-[#EDF7F2] text-green-800 font-medium" 
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon className={`h-5 w-5 ${isActive ? "text-green-700" : "text-gray-400 group-hover:text-gray-600"}`} />
+                      <span className="text-base">{item.name}</span>
+                    </div>
+                    {hasSubmenu && (
+                      <ChevronDown className={`h-4 w-4 transition-transform ${isMenuOpen ? "rotate-180" : ""} ${isActive ? "text-green-700" : "text-gray-400"}`} />
+                    )}
+                  </button>
                 )}
-              </Link>
+
+                {/* Submenu Items */}
+                {hasSubmenu && isMenuOpen && item.subItems && (
+                  <div className="ml-9 mt-1 space-y-1 border-l-2 border-gray-100 pl-4 py-1">
+                    {item.subItems.map((subItem) => (
+                      <Link
+                        key={subItem.name}
+                        href={subItem.href}
+                        className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+                          pathname === subItem.href
+                            ? "bg-[#EDF7F2] text-green-800 font-medium"
+                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                        }`}
+                      >
+                        {subItem.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
