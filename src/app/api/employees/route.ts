@@ -34,8 +34,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  console.log("POST /api/employees HIT");
   try {
     const data = await request.json();
+    console.log("POST /api/employees Payload:", JSON.stringify(data).substring(0, 100));
 
     // Basic validation for required fields
     if (!data.firstName || !data.lastName || !data.email) {
