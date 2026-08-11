@@ -139,3 +139,14 @@ model Role {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g., "view_employees"
+  label       String   // e.g., "View Employees"
+  module      String   // e.g., "Employees", "System", "Files"
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+

@@ -13,17 +13,16 @@ type Role = {
   createdAt: string;
 };
 
-const AVAILABLE_PERMISSIONS = [
-  { id: "view_employees", label: "View Employees", group: "Employees" },
-  { id: "manage_employees", label: "Manage Employees", group: "Employees" },
-  { id: "view_files", label: "View Files", group: "Files" },
-  { id: "manage_files", label: "Manage Files", group: "Files" },
-  { id: "manage_roles", label: "Manage Roles", group: "System" },
-  { id: "manage_settings", label: "Manage Settings", group: "System" },
-];
+type Permission = {
+  id: string;
+  name: string;
+  label: string;
+  module: string;
+};
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<Role[]>([]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Modal state
@@ -35,16 +34,20 @@ export default function RolesPage() {
   const [newRoleDesc, setNewRoleDesc] = useState("");
   const [selectedPerms, setSelectedPerms] = useState<string[]>([]);
 
-  const fetchRoles = async () => {
+  const fetchRolesAndPermissions = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/roles");
-      const json = await res.json();
-      if (json.success) {
-        setRoles(json.data);
-      } else {
-        toast.error("Failed to load roles.");
-      }
+      const [rolesRes, permsRes] = await Promise.all([
+        fetch("/api/roles"),
+        fetch("/api/permissions")
+      ]);
+      
+      const rolesJson = await rolesRes.json();
+      const permsJson = await permsRes.json();
+
+      if (rolesJson.success) setRoles(rolesJson.data);
+      if (permsJson.success) setPermissions(permsJson.data);
+      
     } catch (error) {
       toast.error("Error connecting to server.");
     } finally {
@@ -53,7 +56,7 @@ export default function RolesPage() {
   };
 
   useEffect(() => {
-    fetchRoles();
+    fetchRolesAndPermissions();
   }, []);
 
   const togglePermission = (permId: string) => {
@@ -85,7 +88,7 @@ export default function RolesPage() {
         setNewRoleName("");
         setNewRoleDesc("");
         setSelectedPerms([]);
-        fetchRoles();
+        fetchRolesAndPermissions();
       } else {
         toast.error(json.error || "Failed to create role");
       }
@@ -95,6 +98,14 @@ export default function RolesPage() {
       setIsSubmitting(false);
     }
   };
+
+  const groupedPermissions = permissions.reduce((acc, perm) => {
+    if (!acc[perm.module]) {
+      acc[perm.module] = [];
+    }
+    acc[perm.module].push(perm);
+    return acc;
+  }, {} as Record<string, Permission[]>);
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 pb-24">
@@ -113,7 +124,7 @@ export default function RolesPage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button 
-              onClick={fetchRoles}
+              onClick={fetchRolesAndPermissions}
               className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors text-sm font-medium shadow-sm"
             >
               <RefreshCcw className="h-4 w-4" />
@@ -242,26 +253,37 @@ export default function RolesPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-900 mb-3">Assign Permissions</label>
-                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {AVAILABLE_PERMISSIONS.map(perm => (
-                      <label key={perm.id} className="flex items-start gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-green-500 hover:shadow-sm transition-all has-[:checked]:border-green-500 has-[:checked]:ring-1 has-[:checked]:ring-green-500">
-                        <div className="pt-0.5">
-                          <input 
-                            type="checkbox" 
-                            checked={selectedPerms.includes(perm.id)}
-                            onChange={() => togglePermission(perm.id)}
-                            className="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500"
-                          />
+                {permissions.length === 0 ? (
+                  <div className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                    No permissions found. Add permissions from the Permissions page first.
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-6 max-h-[300px] overflow-y-auto">
+                    {Object.entries(groupedPermissions).map(([moduleName, modulePerms]) => (
+                      <div key={moduleName} className="space-y-3">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{moduleName}</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {modulePerms.map(perm => (
+                            <label key={perm.name} className="flex items-start gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-green-500 hover:shadow-sm transition-all has-[:checked]:border-green-500 has-[:checked]:ring-1 has-[:checked]:ring-green-500">
+                              <div className="pt-0.5">
+                                <input 
+                                  type="checkbox" 
+                                  checked={selectedPerms.includes(perm.name)}
+                                  onChange={() => togglePermission(perm.name)}
+                                  className="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500"
+                                />
+                              </div>
+                              <div>
+                                <div className="text-sm font-semibold text-slate-900">{perm.label}</div>
+                                <div className="text-xs text-slate-500 mt-0.5 font-mono">{perm.name}</div>
+                              </div>
+                            </label>
+                          ))}
                         </div>
-                        <div>
-                          <div className="text-sm font-semibold text-slate-900">{perm.label}</div>
-                          <div className="text-xs text-slate-500 mt-0.5">{perm.group} module</div>
-                        </div>
-                      </label>
+                      </div>
                     ))}
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
