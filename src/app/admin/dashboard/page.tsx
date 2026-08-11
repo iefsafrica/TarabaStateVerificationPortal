@@ -39,6 +39,7 @@ type DashboardData = {
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"Recent" | "Pending">("Recent");
+  const [activeActivityTab, setActiveActivityTab] = useState<"Recent" | "Pending">("Recent");
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -60,7 +61,7 @@ export default function DashboardPage() {
   }, []);
 
   const displayedEmployees = activeTab === "Recent" ? data?.recentEmployees : data?.pendingEmployees;
-  const displayedActivities = activeTab === "Recent" ? data?.recentActivities : data?.pendingActivities;
+  const displayedActivities = activeActivityTab === "Recent" ? data?.recentActivities : data?.pendingActivities;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-fade-in-up pb-10">
@@ -224,8 +225,9 @@ export default function DashboardPage() {
             {["Recent", "Pending"].map((tab) => (
               <button
                 key={tab}
+                onClick={() => setActiveActivityTab(tab as any)}
                 className={`px-6 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  tab === "Recent"
+                  activeActivityTab === tab
                     ? "bg-white text-gray-900 shadow-sm border border-gray-200"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
@@ -260,7 +262,7 @@ export default function DashboardPage() {
             ))
           ) : (
             <div className="p-8 text-center text-gray-500 text-sm">
-               No {activeTab.toLowerCase()} activities found.
+               No {activeActivityTab.toLowerCase()} activities found.
             </div>
           )}
         </div>
