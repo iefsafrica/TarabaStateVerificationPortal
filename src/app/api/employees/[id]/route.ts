@@ -3,11 +3,12 @@ import prisma from "@/lib/db";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const employee = await prisma.employee.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!employee) {
@@ -29,9 +30,10 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
     
     // Process dates safely
@@ -45,7 +47,7 @@ export async function PATCH(
     delete updateData.updatedAt;
 
     const employee = await prisma.employee.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
     });
 
@@ -61,11 +63,12 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await prisma.employee.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true, message: "Employee deleted successfully" });
