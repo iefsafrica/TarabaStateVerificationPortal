@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Database, 
   Users, 
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { toast } from "sonner";
 
 type Employee = {
   id: string;
@@ -38,6 +39,30 @@ export default function EmployeesPage() {
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, pending: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch employees data
+  const fetchEmployees = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/employees");
+      const json = await res.json();
+      if (json.success) {
+        setEmployees(json.data);
+        setStats(json.stats);
+      }
+    } catch (error) {
+      console.error("Failed to load employees", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
 
   const filteredEmployees = employees.filter(emp => {
     // 1. Filter by Active Tab
@@ -163,9 +188,56 @@ export default function EmployeesPage() {
           <div className="flex items-center gap-3">
             {activeTab === "Import Staff" ? (
               <>
-                <button className="flex items-center gap-2 bg-[#00894F] text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm text-sm">
-                  <Upload className="h-4 w-4" />
-                  Import Staff
+                <input 
+                  type="file" 
+                  accept=".csv" 
+                  className="hidden" 
+                  ref={fileInputRef}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setIsImporting(true);
+                    try {
+                      const text = await file.text();
+                      const rows = text.split("\n").filter(row => row.trim());
+                      const headers = rows[0].split(",").map(h => h.trim());
+                      
+                      let imported = 0;
+                      for (let i = 1; i < rows.length; i++) {
+                        const values = rows[i].split(",");
+                        if (values.length !== headers.length) continue;
+                        
+                        const empData: any = {};
+                        headers.forEach((h, idx) => {
+                          empData[h] = values[idx].trim();
+                        });
+                        
+                        if (empData.firstName && empData.lastName) {
+                           await fetch("/api/employees", {
+                             method: "POST",
+                             headers: { "Content-Type": "application/json" },
+                             body: JSON.stringify(empData)
+                           });
+                           imported++;
+                        }
+                      }
+                      toast.success(`Successfully imported ${imported} employees!`);
+                      fetchEmployees(); // refresh list
+                    } catch (err) {
+                      toast.error("Failed to import employees");
+                    } finally {
+                      setIsImporting(false);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }
+                  }}
+                />
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isImporting}
+                  className="flex items-center gap-2 bg-[#00894F] text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm text-sm disabled:opacity-50"
+                >
+                  {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {isImporting ? "Importing..." : "Import Staff"}
                 </button>
                 <a href="/template.csv" download className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm text-sm">
                   <Download className="h-4 w-4" />
