@@ -502,6 +502,17 @@ export default function AddEmployeePage() {
           </div>
         </section>
 
+        <div className="flex justify-end pt-4">
+          <button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="flex items-center gap-2 px-6 py-2.5 bg-[#00894F] text-white rounded-md text-sm font-medium hover:bg-[#007040] transition-colors disabled:opacity-70"
+          >
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {isSubmitting ? 'Saving...' : 'Save Employee'}
+          </button>
+        </div>
+
       </form>
     </div>
   );
