@@ -238,7 +238,7 @@ export default function TrackPage() {
 
       {/* Print-only Status Report Document */}
       {result && (
-        <div id="print-status-report" className="hidden print:block p-8 font-sans max-w-2xl mx-auto">
+        <div id="print-status-report" className="print-only-container p-8 font-sans max-w-2xl mx-auto">
           <div className="text-center border-b-2 border-green-700 pb-4 mb-6">
             <h1 className="text-xl font-bold text-green-800">TARABA STATE GOVERNMENT</h1>
             <p className="text-sm text-slate-600">Staff Onboarding & Verification Portal — Verification Status Report</p>
@@ -276,9 +276,23 @@ export default function TrackPage() {
       )}
 
       <style jsx global>{`
+        .print-only-container {
+          display: none;
+        }
         @media print {
-          body > *:not(#print-status-report) { display: none !important; }
-          #print-status-report { display: block !important; }
+          body * {
+            visibility: hidden !important;
+          }
+          #print-status-report, #print-status-report * {
+            visibility: visible !important;
+          }
+          #print-status-report {
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+          }
         }
       `}</style>
     </div>
