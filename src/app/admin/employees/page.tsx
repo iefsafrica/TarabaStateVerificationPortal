@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Database, 
   Users, 
@@ -12,12 +12,46 @@ import {
   Search,
   Filter,
   SlidersHorizontal,
-  ChevronDown
+  ChevronDown,
+  Loader2
 } from "lucide-react";
 import Image from "next/image";
 
+type Employee = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  department: string;
+  position: string;
+  status: string;
+  joinDate: string;
+  documentCount: number;
+};
+
 export default function EmployeesPage() {
   const [activeTab, setActiveTab] = useState("Staff");
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, pending: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/employees");
+        const json = await res.json();
+        if (json.success) {
+          setEmployees(json.data);
+          setStats(json.stats);
+        }
+      } catch (error) {
+        console.error("Failed to load employees", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-fade-in-up pb-10">
@@ -57,7 +91,7 @@ export default function EmployeesPage() {
             <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
               <Users className="h-6 w-6" />
             </div>
-            <span className="text-3xl font-bold text-gray-900">0</span>
+            <span className="text-3xl font-bold text-gray-900">{stats.total}</span>
           </div>
         </div>
 
@@ -68,7 +102,7 @@ export default function EmployeesPage() {
             <div className="p-2.5 bg-green-50 rounded-xl text-green-600">
               <UserCheck className="h-6 w-6" />
             </div>
-            <span className="text-3xl font-bold text-gray-900">0</span>
+            <span className="text-3xl font-bold text-gray-900">{stats.active}</span>
           </div>
         </div>
 
@@ -79,7 +113,7 @@ export default function EmployeesPage() {
             <div className="p-2.5 bg-red-50 rounded-xl text-red-600">
               <UserX className="h-6 w-6" />
             </div>
-            <span className="text-3xl font-bold text-gray-900">0</span>
+            <span className="text-3xl font-bold text-gray-900">{stats.inactive}</span>
           </div>
         </div>
 
@@ -90,7 +124,7 @@ export default function EmployeesPage() {
             <div className="p-2.5 bg-yellow-50 rounded-xl text-yellow-600">
               <Clock className="h-6 w-6" />
             </div>
-            <span className="text-3xl font-bold text-gray-900">0</span>
+            <span className="text-3xl font-bold text-gray-900">{stats.pending}</span>
           </div>
         </div>
       </div>
@@ -160,28 +194,60 @@ export default function EmployeesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {[1, 2, 3].map((row) => (
-                <tr key={row} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="py-5 px-6">
-                    <div className="h-4 bg-gray-200 rounded-md w-32 animate-pulse"></div>
-                  </td>
-                  <td className="py-5 px-6">
-                    <div className="h-4 bg-gray-200 rounded-md w-24 animate-pulse"></div>
-                  </td>
-                  <td className="py-5 px-6">
-                    <div className="h-4 bg-gray-200 rounded-md w-28 animate-pulse"></div>
-                  </td>
-                  <td className="py-5 px-6">
-                    <div className="h-6 bg-gray-200 rounded-full w-20 animate-pulse"></div>
-                  </td>
-                  <td className="py-5 px-6">
-                    <div className="h-4 bg-gray-200 rounded-md w-24 animate-pulse"></div>
-                  </td>
-                  <td className="py-5 px-6">
-                    <div className="h-4 bg-gray-200 rounded-md w-32 animate-pulse"></div>
+              {isLoading ? (
+                // Skeletons
+                [1, 2, 3].map((row) => (
+                  <tr key={row} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="py-5 px-6">
+                      <div className="h-4 bg-gray-200 rounded-md w-32 animate-pulse"></div>
+                    </td>
+                    <td className="py-5 px-6">
+                      <div className="h-4 bg-gray-200 rounded-md w-24 animate-pulse"></div>
+                    </td>
+                    <td className="py-5 px-6">
+                      <div className="h-4 bg-gray-200 rounded-md w-28 animate-pulse"></div>
+                    </td>
+                    <td className="py-5 px-6">
+                      <div className="h-6 bg-gray-200 rounded-full w-20 animate-pulse"></div>
+                    </td>
+                    <td className="py-5 px-6">
+                      <div className="h-4 bg-gray-200 rounded-md w-24 animate-pulse"></div>
+                    </td>
+                    <td className="py-5 px-6">
+                      <div className="h-4 bg-gray-200 rounded-md w-32 animate-pulse"></div>
+                    </td>
+                  </tr>
+                ))
+              ) : employees.length > 0 ? (
+                employees.map((emp) => (
+                  <tr key={emp.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="py-4 px-6 text-sm text-gray-900 font-medium">{emp.firstName} {emp.lastName}</td>
+                    <td className="py-4 px-6 text-sm text-gray-500">{emp.department}</td>
+                    <td className="py-4 px-6 text-sm text-gray-500">{emp.position}</td>
+                    <td className="py-4 px-6">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                        emp.status === 'Active' ? 'bg-green-100 text-green-700' :
+                        emp.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {emp.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-500">{new Date(emp.joinDate).toLocaleDateString()}</td>
+                    <td className="py-4 px-6 text-sm text-gray-500">{emp.documentCount} docs</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="py-16 text-center">
+                    <div className="flex flex-col items-center justify-center text-gray-400">
+                      <Users className="h-10 w-10 mb-3 text-gray-300" />
+                      <p className="text-gray-500 font-medium">No employees found</p>
+                      <p className="text-sm">Database is empty or no staff matched your filters.</p>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
