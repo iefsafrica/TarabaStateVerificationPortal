@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+// @ts-ignore
 import naija from "naija-state-local-government";
 import Script from "next/script";
 
