@@ -150,3 +150,33 @@ model Permission {
   updatedAt   DateTime @updatedAt
 }
 
+model Registration {
+  id               String   @id @default(uuid())
+  registrationNo   String   @unique
+  bvn              String?
+  nin              String?
+  firstName        String
+  lastName         String
+  middleName       String?
+  email            String
+  phone            String?
+  dateOfBirth      String?
+  gender           String?
+  address          String?
+  department       String?
+  designation      String?
+  employeeId       String?
+  grade            String?
+  dateOfEmployment String?
+  status           String   @default("Pending")
+  ninVerified      Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model SystemSettings {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

@@ -17,7 +17,8 @@ import {
   ChevronDown,
   ChevronLeft,
   Menu,
-  X
+  X,
+  Settings
 } from "lucide-react";
 
 export default function AdminLayout({
@@ -71,6 +72,7 @@ export default function AdminLayout({
     },
     { name: "Roles", href: "/admin/roles", icon: Shield },
     { name: "Permissions", href: "/admin/permissions", icon: Key },
+    { name: "Settings", href: "/admin/settings", icon: Settings },
   ];
 
   return (
