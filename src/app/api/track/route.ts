@@ -20,6 +20,35 @@ export async function GET(request: Request) {
       registration = await (prisma.registration as any).findUnique({
         where: { registrationNo: registrationNo.trim().toUpperCase() }
       });
+      // Fallback: check serviceNo/employmentId/id in Employee table
+      if (!registration) {
+        const emp = await (prisma.employee as any).findFirst({
+          where: {
+            OR: [
+              { employmentId: registrationNo.trim() },
+              { serviceNo: registrationNo.trim() },
+              { id: registrationNo.trim() }
+            ]
+          }
+        });
+        if (emp) {
+          registration = {
+            registrationNo: emp.employmentId || emp.serviceNo || emp.id,
+            firstName: emp.firstName,
+            lastName: emp.lastName,
+            middleName: emp.middleName,
+            email: emp.email,
+            phone: emp.telephone,
+            department: emp.department,
+            designation: emp.position,
+            grade: emp.gradeLevel,
+            status: emp.status || "Active",
+            ninVerified: emp.ninVerified || false,
+            createdAt: emp.createdAt,
+            updatedAt: emp.updatedAt,
+          };
+        }
+      }
     } else if (email) {
       registration = await (prisma.registration as any).findFirst({
         where: {
@@ -30,6 +59,36 @@ export async function GET(request: Request) {
         },
         orderBy: { createdAt: "desc" }
       });
+
+      // Fallback: check Employee table if not in Registration table
+      if (!registration) {
+        const emp = await (prisma.employee as any).findFirst({
+          where: {
+            email: {
+              equals: email.trim(),
+              mode: "insensitive",
+            },
+          },
+          orderBy: { createdAt: "desc" }
+        });
+        if (emp) {
+          registration = {
+            registrationNo: emp.employmentId || emp.serviceNo || `EMP-${emp.id.slice(0, 8).toUpperCase()}`,
+            firstName: emp.firstName,
+            lastName: emp.lastName,
+            middleName: emp.middleName,
+            email: emp.email,
+            phone: emp.telephone,
+            department: emp.department,
+            designation: emp.position,
+            grade: emp.gradeLevel,
+            status: emp.status || "Active",
+            ninVerified: emp.ninVerified || false,
+            createdAt: emp.createdAt,
+            updatedAt: emp.updatedAt,
+          };
+        }
+      }
     }
 
     if (!registration) {
