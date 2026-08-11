@@ -14,7 +14,8 @@ import {
   SlidersHorizontal,
   ChevronDown,
   Loader2,
-  Settings
+  Settings,
+  Upload
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -160,17 +161,32 @@ export default function EmployeesPage() {
           </div>
           
           <div className="flex items-center gap-3">
-            <Link 
-              href="/admin/employees/add"
-              className="flex items-center gap-2 bg-[#00894F] text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm text-sm"
-            >
-              <Plus className="h-4 w-4" />
-              Add Employee
-            </Link>
-            <button className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm text-sm">
-              <Download className="h-4 w-4" />
-              Export
-            </button>
+            {activeTab === "Import Staff" ? (
+              <>
+                <button className="flex items-center gap-2 bg-[#00894F] text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm text-sm">
+                  <Upload className="h-4 w-4" />
+                  Import Staff
+                </button>
+                <a href="/template.csv" download className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm text-sm">
+                  <Download className="h-4 w-4" />
+                  Download CSV Template
+                </a>
+              </>
+            ) : (
+              <>
+                <Link 
+                  href="/admin/employees/add"
+                  className="flex items-center gap-2 bg-[#00894F] text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm text-sm"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Employee
+                </Link>
+                <button className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm text-sm">
+                  <Download className="h-4 w-4" />
+                  Export
+                </button>
+              </>
+            )}
           </div>
         </div>
 
