@@ -93,6 +93,7 @@ export default function AddEmployeePage() {
       name: "Taraba Staff", // We could pass formData.firstName if we wanted
       levelSlug: "tier_1",
       display: "modal",
+      environment: "live", // Required when using PROD keys
       callbacks: {
         onSuccess: async () => {
           toast.success("Verification successful! Fetching data...");
