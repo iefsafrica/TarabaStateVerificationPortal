@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { User, Lock, Eye, EyeOff, Info, Copy } from "lucide-react";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +21,8 @@ export default function LoginPage() {
     
     // Client-side demo logic as requested
     if (username === "info@tarabastate.gov" && password === "Admin@webmaster$1") {
+      localStorage.setItem("admin_session", "active");
+      toast.success("Login successful! Redirecting to dashboard...");
       router.push("/admin/dashboard");
     } else {
       setError("Invalid credentials. Try the demo credentials.");

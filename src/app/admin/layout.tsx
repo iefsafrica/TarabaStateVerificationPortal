@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { 
   LayoutDashboard, 
   Users, 
@@ -22,6 +24,23 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    // Check if session is active
+    const session = localStorage.getItem("admin_session");
+    if (!session) {
+      toast.error("Please login to access the dashboard.");
+      router.push("/auth/login");
+    }
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("admin_session");
+    toast.success("Logged out successfully.");
+    router.push("/auth/login");
+  };
 
   const navItems = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -79,7 +98,10 @@ export default function AdminLayout({
         </nav>
 
         <div className="p-4 border-t border-gray-100">
-          <button className="flex items-center gap-3 px-3 py-2.5 w-full text-gray-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors group">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 w-full text-gray-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors group"
+          >
             <LogOut className="h-4 w-4 text-gray-400 group-hover:text-red-600" />
             <span className="text-sm font-medium">Logout</span>
           </button>
@@ -116,15 +138,41 @@ export default function AdminLayout({
                 2
               </span>
             </div>
-            <div className="flex items-center gap-3 ml-2 border-l border-gray-100 pl-6 cursor-pointer">
-              <div className="h-9 w-9 rounded-full bg-green-700 text-white flex items-center justify-center font-semibold text-sm">
-                AU
+            <div className="relative">
+              <div 
+                className="flex items-center gap-3 ml-2 border-l border-gray-100 pl-6 cursor-pointer"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <div className="h-9 w-9 rounded-full bg-green-700 text-white flex items-center justify-center font-semibold text-sm">
+                  AU
+                </div>
+                <div className="hidden sm:block text-sm">
+                  <p className="font-semibold text-gray-900 leading-tight">Admin User</p>
+                  <p className="text-xs text-gray-500">Administrator</p>
+                </div>
+                <ChevronDown className={`h-4 w-4 text-gray-400 ml-1 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
               </div>
-              <div className="hidden sm:block text-sm">
-                <p className="font-semibold text-gray-900 leading-tight">Admin User</p>
-                <p className="text-xs text-gray-500">Administrator</p>
-              </div>
-              <ChevronDown className="h-4 w-4 text-gray-400 ml-1" />
+              
+              {/* Profile Dropdown */}
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-50 animate-fade-in-up">
+                  <div className="px-4 py-2 border-b border-gray-50">
+                    <p className="text-sm font-medium text-gray-900">info@tarabastate.gov</p>
+                  </div>
+                  <Link href="/admin/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                    My Profile
+                  </Link>
+                  <Link href="/admin/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                    Settings
+                  </Link>
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
