@@ -68,7 +68,7 @@ export default function DashboardPage() {
             <div className="text-sm font-medium text-gray-500 mb-1">Documents cleared for use</div>
             <p className="text-xs text-gray-400">Updated from the latest dashboard pull</p>
           </div>
-          <div className="absolute top-6 right-8 text-3xl font-bold text-gray-900">
+          <div className="mt-4 text-4xl font-bold text-gray-900">
             {data?.documents.verified || 0}
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function DashboardPage() {
             <div className="text-sm font-medium text-gray-500 mb-1">Documents still under review</div>
             <p className="text-xs text-gray-400">Updated from the latest dashboard pull</p>
           </div>
-          <div className="absolute top-6 right-8 text-3xl font-bold text-gray-900">
+          <div className="mt-4 text-4xl font-bold text-gray-900">
             {data?.documents.pending || 0}
           </div>
         </div>
@@ -102,7 +102,7 @@ export default function DashboardPage() {
             <div className="text-sm font-medium text-gray-500 mb-1">Items that need correction</div>
             <p className="text-xs text-gray-400">Updated from the latest dashboard pull</p>
           </div>
-          <div className="absolute top-6 right-8 text-3xl font-bold text-gray-900">
+          <div className="mt-4 text-4xl font-bold text-gray-900">
             {data?.documents.rejected || 0}
           </div>
         </div>

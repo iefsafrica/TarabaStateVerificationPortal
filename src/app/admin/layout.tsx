@@ -15,7 +15,9 @@ import {
   Search,
   Bell,
   ChevronDown,
-  ChevronLeft
+  ChevronLeft,
+  Menu,
+  X
 } from "lucide-react";
 
 export default function AdminLayout({
@@ -26,6 +28,7 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
     "Employees List": true // Open by default if we want, or handle dynamically
   });
@@ -65,8 +68,17 @@ export default function AdminLayout({
 
   return (
     <div className="flex h-screen bg-[#F8FAFC]">
+      
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-100 flex flex-col hidden md:flex">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col transition-transform duration-300 md:static md:translate-x-0 ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="h-20 flex items-center px-6 border-b border-transparent">
           <Link href="/" className="flex items-center gap-3">
             <Image 
@@ -80,8 +92,11 @@ export default function AdminLayout({
               Taraba State <br /> Verification Portal
             </span>
           </Link>
-          <button className="ml-auto text-gray-400 hover:text-gray-600">
-            <ChevronLeft className="h-4 w-4" />
+          <button 
+            className="ml-auto text-gray-400 hover:text-gray-600 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <X className="h-5 w-5" />
           </button>
         </div>
 
@@ -163,8 +178,14 @@ export default function AdminLayout({
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8">
+        <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-4 md:px-8">
           <div className="flex items-center gap-3">
+            <button 
+              className="md:hidden p-2 text-gray-600 hover:bg-gray-50 rounded-lg mr-1"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="h-6 w-6" />
+            </button>
             <Image 
               src="/images/tsu-logo.png" 
               alt="Logo" 
