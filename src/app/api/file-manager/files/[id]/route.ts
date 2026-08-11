@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const body = await request.json();
     const { name } = body;
@@ -14,8 +14,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
        return NextResponse.json({ success: false, error: "Prisma systemFile client not ready" }, { status: 500 });
     }
 
+    const resolvedParams = await params;
     const updatedFile = await prisma.systemFile.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: { name },
     });
 
@@ -36,14 +37,15 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!prisma.systemFile) {
        return NextResponse.json({ success: false, error: "Prisma systemFile client not ready" }, { status: 500 });
     }
 
+    const resolvedParams = await params;
     await prisma.systemFile.delete({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
     });
 
     if (prisma.activity) {
