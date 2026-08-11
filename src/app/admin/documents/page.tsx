@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   File, 
   RefreshCcw, 
@@ -32,6 +32,7 @@ export default function OfficialDocumentsPage() {
   
   const [editingFileId, setEditingFileId] = useState<string | null>(null);
   const [editFileName, setEditFileName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -96,35 +97,40 @@ export default function OfficialDocumentsPage() {
     }
   };
 
-  const handleUpload = () => {
-    const name = prompt("Enter document name (e.g., report.pdf):");
-    if (name) {
-      const size = Math.floor(Math.random() * 5000000) + 10000;
-      const type = name.split('.').pop() || "unknown";
-      
-      // We'll just assign to root folder or the first folder for this mockup since documents page 
-      // is a flattened view of files. We'll fetch folders just to get an ID.
-      fetch("/api/file-manager/folders").then(r => r.json()).then(folderRes => {
-        const folderId = folderRes.data?.[0]?.id;
-        if (!folderId) {
-          toast.error("Please create a folder in File Manager first.");
-          return;
-        }
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
 
-        fetch("/api/file-manager/files", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, size, type, folderId })
-        }).then(res => res.json()).then(json => {
-          if (json.success) {
-            toast.success("Document uploaded!");
-            fetchFiles();
-          } else {
-            toast.error("Upload failed");
-          }
-        });
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const name = file.name;
+    const size = file.size;
+    const type = name.split('.').pop() || "unknown";
+
+    fetch("/api/file-manager/folders").then(r => r.json()).then(folderRes => {
+      const folderId = folderRes.data?.[0]?.id;
+      if (!folderId) {
+        toast.error("Please create a folder in File Manager first.");
+        return;
+      }
+
+      fetch("/api/file-manager/files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, size, type, folderId })
+      }).then(res => res.json()).then(json => {
+        if (json.success) {
+          toast.success("Document uploaded!");
+          fetchFiles();
+        } else {
+          toast.error("Upload failed");
+        }
+        // Reset file input
+        if (fileInputRef.current) fileInputRef.current.value = "";
       });
-    }
+    });
   };
 
   const pdfCount = files.filter(f => f.type.toLowerCase() === 'pdf').length;
@@ -157,12 +163,18 @@ export default function OfficialDocumentsPage() {
               Refresh
             </button>
             <button 
-              onClick={handleUpload}
+              onClick={handleUploadClick}
               className="flex items-center gap-2 px-5 py-2.5 bg-[#00894F] text-white rounded-xl text-sm font-medium hover:bg-green-700 shadow-sm transition-colors"
             >
               <Upload className="h-4 w-4" />
               Upload Document
             </button>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              className="hidden" 
+            />
           </div>
         </div>
       </div>

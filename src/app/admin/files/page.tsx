@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   FolderOpen, 
   File, 
@@ -71,6 +71,8 @@ export default function FileManagerPage() {
 
   const [editingFileId, setEditingFileId] = useState<string | null>(null);
   const [editFileName, setEditFileName] = useState("");
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -226,6 +228,41 @@ export default function FileManagerPage() {
     } catch (e) {
       toast.error("Error deleting file");
     }
+  };
+
+  const handleUploadClick = () => {
+    if (folders.length === 0) return toast.error("Create a folder first!");
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const name = file.name;
+    const size = file.size;
+    const type = name.split('.').pop() || "unknown";
+
+    fetch("/api/file-manager/files", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        name, 
+        size, 
+        type, 
+        folderId: selectedFolderId === 'all' ? folders[0].id : selectedFolderId 
+      })
+    }).then(res => res.json()).then(json => {
+      if (json.success) {
+        toast.success("File uploaded!");
+        fetchFiles();
+        fetchDashboard();
+      } else {
+        toast.error("Upload failed");
+      }
+      // Reset file input
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    });
   };
 
   return (
@@ -524,33 +561,18 @@ export default function FileManagerPage() {
               Refresh
             </button>
             <button 
-              onClick={() => {
-                if (folders.length === 0) return toast.error("Create a folder first!");
-                // Mock upload for now
-                const name = prompt("Enter file name (e.g., document.pdf):");
-                if (name) {
-                  const size = Math.floor(Math.random() * 5000000) + 10000;
-                  const type = name.split('.').pop() || "unknown";
-                  fetch("/api/file-manager/files", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, size, type, folderId: selectedFolderId === 'all' ? folders[0].id : selectedFolderId })
-                  }).then(res => res.json()).then(json => {
-                    if (json.success) {
-                      toast.success("File uploaded!");
-                      fetchFiles();
-                      fetchDashboard();
-                    } else {
-                      toast.error("Upload failed");
-                    }
-                  });
-                }
-              }}
+              onClick={handleUploadClick}
               className="flex items-center gap-2 px-4 py-2 bg-[#00894F] text-white rounded-lg text-sm font-medium hover:bg-green-700 shadow-sm transition-colors"
             >
               <Upload className="h-4 w-4" />
               Upload File
             </button>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              className="hidden" 
+            />
           </div>
         </div>
 
