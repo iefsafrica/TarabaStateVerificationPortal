@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import naija from "naija-state-local-government";
 
 // Helper component for standard inputs moved outside to prevent re-renders causing focus loss
 const InputGroup = ({ label, name, value, onChange, type = "text", placeholder, required = false }: any) => (
@@ -75,7 +76,14 @@ export default function AddEmployeePage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [name]: value };
+      // Reset LGA if State of Residence changes
+      if (name === "stateOfResidence") {
+        newData.lga = "";
+      }
+      return newData;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -196,10 +204,9 @@ export default function AddEmployeePage() {
               <label className="text-sm font-medium text-gray-700">State of Origin <span className="text-red-500">*</span></label>
               <select name="stateOfOrigin" value={formData.stateOfOrigin} onChange={handleChange} required className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] bg-white">
                 <option value="">Select state of origin</option>
-                <option value="Abia">Abia</option>
-                <option value="Taraba">Taraba</option>
-                <option value="Lagos">Lagos</option>
-                <option value="FCT">FCT</option>
+                {naija.states().map((state: string) => (
+                  <option key={state} value={state}>{state}</option>
+                ))}
               </select>
             </div>
             
@@ -211,18 +218,19 @@ export default function AddEmployeePage() {
               <label className="text-sm font-medium text-gray-700">State of Residence <span className="text-red-500">*</span></label>
               <select name="stateOfResidence" value={formData.stateOfResidence} onChange={handleChange} required className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] bg-white">
                 <option value="">Select state</option>
-                <option value="Abia">Abia</option>
-                <option value="Taraba">Taraba</option>
-                <option value="Lagos">Lagos</option>
+                {naija.states().map((state: string) => (
+                  <option key={state} value={state}>{state}</option>
+                ))}
               </select>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">LGA <span className="text-red-500">*</span></label>
-              <select name="lga" value={formData.lga} onChange={handleChange} required className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] bg-white">
-                <option value="">Select state first</option>
-                <option value="Jalingo">Jalingo</option>
-                <option value="Wukari">Wukari</option>
+              <select name="lga" value={formData.lga} onChange={handleChange} required disabled={!formData.stateOfResidence} className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] bg-white disabled:bg-gray-50 disabled:text-gray-400">
+                <option value="">{formData.stateOfResidence ? "Select LGA" : "Select state first"}</option>
+                {formData.stateOfResidence && naija.lgas(formData.stateOfResidence)?.lgas?.map((lga: string) => (
+                  <option key={lga} value={lga}>{lga}</option>
+                ))}
               </select>
             </div>
 
