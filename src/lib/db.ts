@@ -17,3 +17,4 @@ const prisma = globalThis.prismaV2 ?? prismaClientSingleton()
 export default prisma
 
 if (process.env.NODE_ENV !== 'production') globalThis.prismaV2 = prisma
+ 

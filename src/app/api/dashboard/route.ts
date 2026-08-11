@@ -3,37 +3,37 @@ import prisma from "@/lib/db";
 
 export async function GET() {
   try {
-    // Document Stats
-    const totalDocs = await prisma.document.count();
-    const verifiedDocs = await prisma.document.count({ where: { status: "Verified" } });
-    const pendingDocs = await prisma.document.count({ where: { status: "Pending" } });
-    const rejectedDocs = await prisma.document.count({ where: { status: "Rejected" } });
+    // Document Stats (with safety checks for schema cache)
+    const totalDocs = prisma.document ? await prisma.document.count() : 0;
+    const verifiedDocs = prisma.document ? await prisma.document.count({ where: { status: "Verified" } }) : 0;
+    const pendingDocs = prisma.document ? await prisma.document.count({ where: { status: "Pending" } }) : 0;
+    const rejectedDocs = prisma.document ? await prisma.document.count({ where: { status: "Rejected" } }) : 0;
 
     // Recent Employees (limit 5)
-    const recentEmployees = await prisma.employee.findMany({
+    const recentEmployees = prisma.employee ? await prisma.employee.findMany({
       take: 5,
       orderBy: { createdAt: "desc" },
-    });
+    }) : [];
 
     // Pending Employees (limit 5)
-    const pendingEmployees = await prisma.employee.findMany({
+    const pendingEmployees = prisma.employee ? await prisma.employee.findMany({
       where: { status: "Pending" },
       take: 5,
       orderBy: { createdAt: "desc" },
-    });
+    }) : [];
 
     // Recent Activities (limit 5)
-    const recentActivities = await prisma.activity.findMany({
+    const recentActivities = prisma.activity ? await prisma.activity.findMany({
       take: 5,
       orderBy: { createdAt: "desc" },
-    });
+    }) : [];
 
     // Pending Activities (limit 5)
-    const pendingActivities = await prisma.activity.findMany({
+    const pendingActivities = prisma.activity ? await prisma.activity.findMany({
       where: { status: "Pending" },
       take: 5,
       orderBy: { createdAt: "desc" },
-    });
+    }) : [];
 
     return NextResponse.json({
       success: true,
@@ -53,7 +53,7 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to fetch dashboard statistics" },
+      { success: false, error: "Failed to fetch dashboard statistics: " + (error as Error).message },
       { status: 500 }
     );
   }

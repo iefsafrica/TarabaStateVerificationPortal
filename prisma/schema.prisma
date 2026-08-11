@@ -105,3 +105,28 @@ model Activity {
   status      String   @default("Success") // "Success", "Pending", "Failed"
   createdAt   DateTime @default(now())
 }
+
+model Folder {
+  id        String   @id @default(uuid())
+  name      String
+  parentId  String?
+  parent    Folder?  @relation("FolderToFolder", fields: [parentId], references: [id])
+  children  Folder[] @relation("FolderToFolder")
+  scope     String   @default("Global")
+  files     SystemFile[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SystemFile {
+  id        String   @id @default(uuid())
+  name      String
+  size      Int
+  type      String
+  url       String?
+  folderId  String
+  folder    Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
