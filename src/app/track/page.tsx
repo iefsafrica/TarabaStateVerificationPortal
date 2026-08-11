@@ -240,7 +240,8 @@ export default function TrackPage() {
       {result && (
         <div id="print-status-report" className="print-only-container p-8 font-sans max-w-2xl mx-auto">
           <div className="flex items-center gap-4 border-b-2 border-green-700 pb-4 mb-6 text-left">
-            <Image src="/images/tsu-logo.png" alt="Taraba State Logo" width={56} height={56} className="h-14 w-14 object-contain shrink-0" />
+            {/* eslint-disable-next-html-element-warnings, @next/next/no-img-element */}
+            <img src="/images/tsu-logo.png" alt="Taraba State Logo" className="h-14 w-14 object-contain shrink-0" />
             <div>
               <h1 className="text-xl font-bold text-green-800">TARABA STATE GOVERNMENT</h1>
               <p className="text-sm text-slate-600">Staff Onboarding & Verification Portal — Verification Status Report</p>
@@ -286,8 +287,10 @@ export default function TrackPage() {
           body * {
             visibility: hidden !important;
           }
-          #print-status-report, #print-status-report * {
+          #print-status-report, #print-status-report *, #print-status-report img {
             visibility: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           #print-status-report {
             display: block !important;
