@@ -61,7 +61,14 @@ export default function AdminLayout({
         { name: "Employee", href: "/admin/employees" }
       ]
     },
-    { name: "File Manager", href: "/admin/files", icon: FolderOpen, hasSubmenu: true },
+    { 
+      name: "File Manager", 
+      icon: FolderOpen, 
+      subItems: [
+        { name: "File Manager", href: "/admin/files" },
+        { name: "Official Documents", href: "/admin/documents" }
+      ]
+    },
     { name: "Roles", href: "/admin/roles", icon: Shield },
     { name: "Permissions", href: "/admin/permissions", icon: Key },
   ];
