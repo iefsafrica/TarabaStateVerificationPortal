@@ -54,7 +54,7 @@ export async function POST(request: Request) {
         email: data.email,
         department: data.department || "Unassigned",
         position: data.position || "Staff",
-        status: data.status || "Active",
+        status: data.status || "Pending",
         
         middleName: data.middleName,
         title: data.title,
