@@ -4,10 +4,10 @@ import nodemailer from "nodemailer";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const employeeId = params.id;
+    const employeeId = (await params).id;
     const employee = await prisma.employee.findUnique({
       where: { id: employeeId },
     });
