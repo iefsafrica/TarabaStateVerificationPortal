@@ -15,7 +15,8 @@ import {
   ChevronDown,
   Loader2,
   Settings,
-  Upload
+  Upload,
+  Trash2
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -41,6 +42,7 @@ export default function EmployeesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch employees data
@@ -98,6 +100,42 @@ export default function EmployeesPage() {
     }
     fetchData();
   }, []);
+
+  const handleVerify = async (id: string) => {
+    try {
+      toast.loading("Verifying employee and sending email...", { id: "verify" });
+      const res = await fetch(`/api/employees/${id}/verify`, { method: "POST" });
+      const json = await res.json();
+      
+      if (json.success) {
+        toast.success("Employee verified and email sent successfully", { id: "verify" });
+        fetchEmployees(); // Refresh data
+      } else {
+        toast.error(`Verification failed: ${json.error}`, { id: "verify" });
+      }
+    } catch (err) {
+      toast.error("An error occurred during verification", { id: "verify" });
+    }
+  };
+
+  const handleClearPending = async () => {
+    if (!confirm("Are you sure you want to clear all pending employees? This cannot be undone.")) return;
+    
+    try {
+      toast.loading("Clearing pending employees...", { id: "clear" });
+      const res = await fetch(`/api/employees/pending`, { method: "DELETE" });
+      const json = await res.json();
+      
+      if (json.success) {
+        toast.success(`Cleared ${json.count} pending employees.`, { id: "clear" });
+        fetchEmployees();
+      } else {
+        toast.error("Failed to clear pending employees.", { id: "clear" });
+      }
+    } catch (err) {
+      toast.error("An error occurred.", { id: "clear" });
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-fade-in-up pb-10">
@@ -190,7 +228,7 @@ export default function EmployeesPage() {
               <>
                 <input 
                   type="file" 
-                  accept=".csv" 
+                  accept=".csv, .xlsx, .xls" 
                   className="hidden" 
                   ref={fileInputRef}
                   onChange={async (e) => {
@@ -198,32 +236,133 @@ export default function EmployeesPage() {
                     if (!file) return;
                     setIsImporting(true);
                     try {
-                      const text = await file.text();
-                      const rows = text.split("\n").filter(row => row.trim());
-                      const headers = rows[0].split(",").map(h => h.trim());
+                      // Dynamically import xlsx to avoid bloating initial load
+                      const XLSX = await import("xlsx");
+                      
+                      const data = await file.arrayBuffer();
+                      const workbook = XLSX.read(data, { type: "array" });
+                      // Search through all sheets to find the one with our data
+                      let headerRowIndex = -1;
+                      let rows: any[] = [];
+                      let debugInfo = "";
+                      
+                      for (const sheetName of workbook.SheetNames) {
+                        const ws = workbook.Sheets[sheetName];
+                        const sheetRows = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1 });
+                        
+                        for (let r = 0; r < Math.min(20, sheetRows.length); r++) {
+                          const rowCells = (sheetRows[r] || []).map((c: any) => String(c).toLowerCase().replace(/[^a-z0-9]/g, ''));
+                          
+                          // Look for exact cell matches of our known headers
+                          if (
+                            rowCells.includes("fullname") || 
+                            rowCells.includes("currentstationnameofschool") ||
+                            rowCells.includes("dateofbirth") ||
+                            rowCells.includes("phonenumber")
+                          ) {
+                            headerRowIndex = r;
+                            rows = sheetRows;
+                            break;
+                          }
+                        }
+                        if (headerRowIndex !== -1) break;
+                        debugInfo += `[${sheetName}: no headers found] `;
+                      }
+                      
+                      if (headerRowIndex === -1 || !rows || rows.length < 2) {
+                        toast.error(`Could not find a valid data table in any sheet. ${debugInfo}`);
+                        setIsImporting(false);
+                        return;
+                      }
+
+                      // Row `headerRowIndex` is the headers
+                      const headers = (rows[headerRowIndex] || []).map((h: any) => String(h).toLowerCase().replace(/[^a-z0-9]/g, ''));
                       
                       let imported = 0;
-                      for (let i = 1; i < rows.length; i++) {
-                        const values = rows[i].split(",");
-                        if (values.length !== headers.length) continue;
+                      let lastApiError = "";
+                      
+                      for (let i = headerRowIndex + 1; i < rows.length; i++) {
+                        // Calculate progress
+                        setUploadProgress(Math.round(((i - headerRowIndex) / (rows.length - headerRowIndex)) * 100));
+
+                        const values = rows[i] || [];
+                        if (values.length === 0) continue; // Skip empty rows
                         
                         const empData: any = {};
-                        headers.forEach((h, idx) => {
-                          empData[h] = values[idx].trim();
+                        headers.forEach((key: string, idx: number) => {
+                          const val = values[idx] != null ? String(values[idx]).trim() : "";
+                          
+                          if (key === "fullname") {
+                             const parts = val.split(" ");
+                             empData.firstName = parts[0] || "Unknown";
+                             empData.lastName = parts.slice(1).join(" ") || "Unknown";
+                          }
+                          else if (key === "emailaddress" || key === "email") empData.email = val;
+                          else if (key === "currentstationnameofschool" || key.includes("currentstation")) empData.currentStation = val;
+                          else if (key === "lga") empData.lga = val;
+                          else if (key === "sex" || key === "gender") empData.gender = val;
+                          else if (key === "cadre") empData.cadre = val;
+                          else if (key === "dateofbirth" || key === "dob") empData.birthdate = val;
+                          else if (key === "dateoflastpromotion") empData.dateOfLastPromotion = val;
+                          else if (key === "localgovernmentoforigin" || key === "lgaoforigin") empData.lgaOfOrigin = val;
+                          else if (key === "ntionality" || key === "nationality") empData.nationality = val;
+                          else if (key === "phonenumber" || key === "phone") empData.telephone = val;
+                          else if (key === "rank") empData.rank = val;
+                          else if (key === "highestqualifications" || key.includes("qualification")) empData.highestQualification = val;
+                          else if (key === "stateoforigin") empData.stateOfOrigin = val;
+                          else if (key === "gradelevelgl" || key === "gradelevel") empData.gradeLevel = val;
+                          else if (key === "subjecttaughtjobspecification" || key.includes("subject")) empData.subjectTaught = val;
+                          else if (key === "bank" || key === "bankname") empData.bankName = val;
+                          else if (key === "accountnumber") empData.accountNumber = val;
+                          else if (key === "bvn") empData.bvn = val;
+                          else if (key === "nin") empData.nin = val;
+                          else if (key === "lgastandardized") empData.standardizedLga = val;
+                          else if (key === "sexstandardized") empData.standardizedSex = val;
+                          else if (key === "cadrestandardized") empData.standardizedCadre = val;
+                          else if (key === "duplicateflag") empData.duplicateFlag = val;
+                          else if (key === "sharedidentifierflag") empData.sharedIdentifierFlag = val;
+                          else if (key === "firstname") empData.firstName = val;
+                          else if (key === "lastname") empData.lastName = val;
+                          else {
+                             empData[key] = val; // fallback
+                          }
                         });
+
+                        // Provide dummy email if missing or if it's a generic placeholder like "none", "n/a", "-"
+                        const emailVal = (empData.email || "").toLowerCase();
+                        if (!emailVal || emailVal === "none" || emailVal === "n/a" || emailVal === "nil" || emailVal === "null" || emailVal === "-" || !emailVal.includes("@")) {
+                          empData.email = `imported-${Date.now()}-row${i}@example.com`;
+                        }
                         
-                        if (empData.firstName && empData.lastName) {
-                           await fetch("/api/employees", {
+                        // We must have at least a first name or last name
+                        if (empData.firstName || empData.lastName || empData.currentStation) {
+                           if (!empData.firstName) empData.firstName = "Unknown";
+                           if (!empData.lastName) empData.lastName = "Unknown";
+
+                           const res = await fetch("/api/employees", {
                              method: "POST",
                              headers: { "Content-Type": "application/json" },
                              body: JSON.stringify(empData)
                            });
-                           imported++;
+                           
+                           if (res.ok) {
+                             imported++;
+                           } else {
+                             const err = await res.json();
+                             lastApiError = JSON.stringify(err);
+                             console.error("Import error for row", i, err);
+                           }
                         }
                       }
-                      toast.success(`Successfully imported ${imported} employees!`);
+                      
+                      if (imported === 0) {
+                        toast.error(`Imported 0. Error: ${lastApiError || "No rows matched"}. Headers: ${headers.slice(0, 3).join(", ")}`);
+                      } else {
+                        toast.success(`Successfully imported ${imported} employees!`);
+                      }
                       fetchEmployees(); // refresh list
                     } catch (err) {
+
                       toast.error("Failed to import employees");
                     } finally {
                       setIsImporting(false);
@@ -234,15 +373,32 @@ export default function EmployeesPage() {
                 <button 
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isImporting}
-                  className="flex items-center gap-2 bg-[#00894F] text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm text-sm disabled:opacity-50"
+                  className="relative flex items-center justify-center gap-2 bg-[#00894F] text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm text-sm disabled:opacity-80 overflow-hidden w-40"
                 >
-                  {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                  {isImporting ? "Importing..." : "Import Staff"}
+                  {isImporting && (
+                     <div 
+                       className="absolute left-0 top-0 bottom-0 bg-green-800 transition-all duration-200" 
+                       style={{ width: `${uploadProgress}%` }}
+                     />
+                  )}
+                  <span className="relative z-10 flex items-center gap-2">
+                    {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {isImporting ? `Importing ${uploadProgress}%` : "Import Staff"}
+                  </span>
                 </button>
                 <a href="/template.csv" download className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm text-sm">
                   <Download className="h-4 w-4" />
                   Download CSV Template
                 </a>
+                {stats.pending > 0 && (
+                  <button 
+                    onClick={handleClearPending}
+                    className="flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors shadow-sm text-sm"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Clear Pending
+                  </button>
+                )}
               </>
             ) : (
               <>
@@ -353,13 +509,34 @@ export default function EmployeesPage() {
                     <td className="py-4 px-6 text-sm text-gray-500">{new Date(emp.joinDate).toLocaleDateString()}</td>
                     <td className="py-4 px-6 text-sm text-gray-500">{emp.documentCount} docs</td>
                     <td className="py-4 px-6 text-right">
-                      <Link 
-                        href={`/admin/employees/${emp.id}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md text-xs font-medium transition-colors border border-gray-200"
-                      >
-                        <Settings className="w-3.5 h-3.5" />
-                        Manage
-                      </Link>
+                      <div className="flex items-center justify-end gap-2">
+                        {emp.status === 'Pending' && (
+                          <button
+                            onClick={() => handleVerify(emp.id)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 rounded-md text-xs font-medium transition-colors border border-green-200"
+                          >
+                            <UserCheck className="w-3.5 h-3.5" />
+                            Verify & Approve
+                          </button>
+                        )}
+                        {emp.status === 'Active' && (
+                          <Link
+                            href={`/admin/employees/${emp.id}/receipt`}
+                            target="_blank"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md text-xs font-medium transition-colors border border-blue-200"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            Print Receipt
+                          </Link>
+                        )}
+                        <Link 
+                          href={`/admin/employees/${emp.id}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md text-xs font-medium transition-colors border border-gray-200"
+                        >
+                          <Settings className="w-3.5 h-3.5" />
+                          Manage
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))

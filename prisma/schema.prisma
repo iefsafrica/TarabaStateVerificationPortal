@@ -81,6 +81,20 @@ model Employee {
   ninVerified   Boolean  @default(false)
   ninData       Json?
 
+  // Teacher CSV Import Fields
+  currentStation         String?
+  dateOfLastPromotion    String?
+  lgaOfOrigin            String?
+  nationality            String?
+  highestQualification   String?
+  subjectTaught          String?
+  bvn                    String?
+  standardizedLga        String?
+  standardizedSex        String?
+  standardizedCadre      String?
+  duplicateFlag          String?
+  sharedIdentifierFlag   String?
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

@@ -47,11 +47,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check for duplicate email
+    let finalEmail = data.email;
+    const existing = await prisma.employee.findUnique({
+      where: { email: finalEmail }
+    });
+    if (existing) {
+      const parts = finalEmail.split("@");
+      finalEmail = `${parts[0]}+dup${Date.now()}-${Math.random().toString(36).substring(7)}@${parts[1] || "example.com"}`;
+    }
+
     const newEmployee = await prisma.employee.create({
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
-        email: data.email,
+        email: finalEmail,
         department: data.department || "Unassigned",
         position: data.position || "Staff",
         status: data.status || "Pending",
@@ -100,6 +110,20 @@ export async function POST(request: Request) {
 
         ninVerified: data.ninVerified || false,
         ninData: data.ninData || null,
+
+        // Teacher CSV Import Fields
+        currentStation: data.currentStation,
+        dateOfLastPromotion: data.dateOfLastPromotion,
+        lgaOfOrigin: data.lgaOfOrigin,
+        nationality: data.nationality,
+        highestQualification: data.highestQualification,
+        subjectTaught: data.subjectTaught,
+        bvn: data.bvn,
+        standardizedLga: data.standardizedLga,
+        standardizedSex: data.standardizedSex,
+        standardizedCadre: data.standardizedCadre,
+        duplicateFlag: data.duplicateFlag,
+        sharedIdentifierFlag: data.sharedIdentifierFlag,
       },
     });
 
