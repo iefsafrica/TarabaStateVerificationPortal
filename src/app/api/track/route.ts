@@ -33,13 +33,17 @@ export async function GET(request: Request) {
             OR: [
               { employmentId: registrationNo.trim() },
               { serviceNo: registrationNo.trim() },
-              { id: registrationNo.trim() }
+              { id: registrationNo.trim() },
+              { fileNo: registrationNo.trim() },
+              { bvn: registrationNo.trim() },
+              { nin: registrationNo.trim() }
             ]
           }
         });
         if (emp) {
           registration = {
-            registrationNo: emp.employmentId || emp.serviceNo || `EMP-${emp.id.slice(0, 8).toUpperCase()}`,
+            id: emp.id,
+            registrationNo: emp.fileNo || emp.employmentId || emp.serviceNo || `EMP-${emp.id.slice(0, 8).toUpperCase()}`,
             firstName: emp.firstName,
             lastName: emp.lastName,
             middleName: emp.middleName,
@@ -52,6 +56,24 @@ export async function GET(request: Request) {
             ninVerified: emp.ninVerified || false,
             createdAt: emp.createdAt,
             updatedAt: emp.updatedAt,
+            // Additional imported details
+            currentStation: emp.currentStation,
+            lga: emp.lga,
+            gender: emp.gender || emp.standardizedSex,
+            cadre: emp.cadre || emp.standardizedCadre,
+            birthdate: emp.birthdate,
+            dateOfFirstAppointment: emp.dateOfFirstAppointment,
+            dateOfLastPromotion: emp.dateOfLastPromotion,
+            lgaOfOrigin: emp.lgaOfOrigin,
+            nationality: emp.nationality,
+            rank: emp.rank,
+            highestQualification: emp.highestQualification,
+            stateOfOrigin: emp.stateOfOrigin,
+            subjectTaught: emp.subjectTaught,
+            bankName: emp.bankName,
+            accountNumber: emp.accountNumber,
+            bvn: emp.bvn,
+            nin: emp.nin,
           };
         }
       }
@@ -85,7 +107,8 @@ export async function GET(request: Request) {
         });
         if (emp) {
           registration = {
-            registrationNo: emp.employmentId || emp.serviceNo || `EMP-${emp.id.slice(0, 8).toUpperCase()}`,
+            id: emp.id,
+            registrationNo: emp.fileNo || emp.employmentId || emp.serviceNo || `EMP-${emp.id.slice(0, 8).toUpperCase()}`,
             firstName: emp.firstName,
             lastName: emp.lastName,
             middleName: emp.middleName,
@@ -98,6 +121,24 @@ export async function GET(request: Request) {
             ninVerified: emp.ninVerified || false,
             createdAt: emp.createdAt,
             updatedAt: emp.updatedAt,
+            // Additional imported details
+            currentStation: emp.currentStation,
+            lga: emp.lga,
+            gender: emp.gender || emp.standardizedSex,
+            cadre: emp.cadre || emp.standardizedCadre,
+            birthdate: emp.birthdate,
+            dateOfFirstAppointment: emp.dateOfFirstAppointment,
+            dateOfLastPromotion: emp.dateOfLastPromotion,
+            lgaOfOrigin: emp.lgaOfOrigin,
+            nationality: emp.nationality,
+            rank: emp.rank,
+            highestQualification: emp.highestQualification,
+            stateOfOrigin: emp.stateOfOrigin,
+            subjectTaught: emp.subjectTaught,
+            bankName: emp.bankName,
+            accountNumber: emp.accountNumber,
+            bvn: emp.bvn,
+            nin: emp.nin,
           };
         }
       }

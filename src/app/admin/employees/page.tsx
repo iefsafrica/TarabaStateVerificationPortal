@@ -37,7 +37,7 @@ type Employee = {
 export default function EmployeesPage() {
   const [activeTab, setActiveTab] = useState("Staff");
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, pending: 0 });
+  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, pending: 0, selfVerified: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
@@ -70,6 +70,7 @@ export default function EmployeesPage() {
     // 1. Filter by Active Tab
     if (activeTab === "Staff" && emp.status !== "Active") return false;
     if (activeTab === "Pending Staff" && emp.status !== "Pending") return false;
+    if (activeTab === "Self-Verified" && emp.status !== "Self-Verified") return false;
 
     // 2. Filter by Search Query
     if (!searchQuery.trim()) return true;
@@ -118,6 +119,23 @@ export default function EmployeesPage() {
     }
   };
 
+  const handleApprove = async (id: string) => {
+    try {
+      toast.loading("Approving employee profile and sending email...", { id: "approve" });
+      const res = await fetch(`/api/employees/${id}/approve`, { method: "POST" });
+      const json = await res.json();
+      
+      if (json.success) {
+        toast.success("Employee approved and email sent successfully", { id: "approve" });
+        fetchEmployees();
+      } else {
+        toast.error(`Approval failed: ${json.error}`, { id: "approve" });
+      }
+    } catch (err) {
+      toast.error("An error occurred during approval", { id: "approve" });
+    }
+  };
+
   const handleClearPending = async () => {
     if (!confirm("Are you sure you want to clear all pending employees? This cannot be undone.")) return;
     
@@ -144,7 +162,7 @@ export default function EmployeesPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         {/* Tabs */}
         <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-gray-100 shadow-sm">
-          {["Staff", "Pending Staff", "Import Staff"].map((tab) => (
+          {["Staff", "Pending Staff", "Self-Verified", "Import Staff"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -198,6 +216,17 @@ export default function EmployeesPage() {
               <UserX className="h-6 w-6" />
             </div>
             <span className="text-3xl font-bold text-gray-900">{stats.inactive}</span>
+          </div>
+        </div>
+
+        {/* Self-Verified Queue */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col justify-center h-32">
+          <h3 className="text-gray-500 font-medium text-sm mb-4">Self-Verified Queue</h3>
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
+              <UserCheck className="h-6 w-6" />
+            </div>
+            <span className="text-3xl font-bold text-gray-900">{stats.selfVerified}</span>
           </div>
         </div>
 
@@ -500,6 +529,7 @@ export default function EmployeesPage() {
                     <td className="py-4 px-6">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                         emp.status === 'Active' ? 'bg-green-100 text-green-700' :
+                        emp.status === 'Self-Verified' ? 'bg-blue-100 text-blue-700' :
                         emp.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
                         'bg-red-100 text-red-700'
                       }`}>
@@ -517,6 +547,15 @@ export default function EmployeesPage() {
                           >
                             <UserCheck className="w-3.5 h-3.5" />
                             Verify & Approve
+                          </button>
+                        )}
+                        {emp.status === 'Self-Verified' && (
+                          <button
+                            onClick={() => handleApprove(emp.id)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-md text-xs font-medium transition-colors border border-blue-200"
+                          >
+                            <UserCheck className="w-3.5 h-3.5" />
+                            Review & Approve
                           </button>
                         )}
                         {emp.status === 'Active' && (

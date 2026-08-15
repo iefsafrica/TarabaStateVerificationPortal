@@ -13,6 +13,7 @@ export async function GET() {
     const activeCount = employees.filter((emp) => emp.status === "Active").length;
     const inactiveCount = employees.filter((emp) => emp.status === "Inactive").length;
     const pendingCount = employees.filter((emp) => emp.status === "Pending").length;
+    const selfVerifiedCount = employees.filter((emp) => emp.status === "Self-Verified").length;
 
     return NextResponse.json({
       success: true,
@@ -22,6 +23,7 @@ export async function GET() {
         active: activeCount,
         inactive: inactiveCount,
         pending: pendingCount,
+        selfVerified: selfVerifiedCount,
       },
     });
   } catch (error) {
