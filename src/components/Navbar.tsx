@@ -7,9 +7,12 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LayoutDashboard, LogOut } from "lucide-react";
 
+import { useAppConfig } from "@/components/AppConfigContext";
+
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
+  const { appName, appLogo } = useAppConfig();
 
   useEffect(() => {
     const session = localStorage.getItem("admin_session");
@@ -27,8 +30,8 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-200">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/images/tsu-logo.png" alt="TSU Logo" width={40} height={40} className="w-10 h-10 object-contain" />
-          <span className="font-bold text-lg text-primary hidden sm:block">Taraba State Verification Portal</span>
+          <Image src={appLogo} alt="Logo" width={40} height={40} className="w-10 h-10 object-contain" />
+          <span className="font-bold text-lg text-primary hidden sm:block">{appName}</span>
         </Link>
         <div className="flex items-center gap-4">
           <Link href="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Home</Link>

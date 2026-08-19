@@ -7,26 +7,34 @@ import Image from "next/image";
 import { User, Lock, Eye, EyeOff, Info, Copy } from "lucide-react";
 import { toast } from "sonner";
 
+import { useAppConfig } from "@/components/AppConfigContext";
+
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showDemo, setShowDemo] = useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const router = useRouter();
+  const { appLogo } = useAppConfig();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogin = (e: FormEvent) => {
     e.preventDefault();
-    setError("");
-    
-    // Client-side demo logic as requested
-    if (username === "info@tarabastate.gov" && password === "Admin@webmaster$1") {
-      localStorage.setItem("admin_session", "active");
-      toast.success("Login successful! Redirecting to dashboard...");
-      router.push("/admin/dashboard");
-    } else {
-      setError("Invalid credentials. Try the demo credentials.");
-    }
+    setIsLoading(true);
+
+    setTimeout(() => {
+      if (email === "admin@taraba.gov.ng" && password === "admin123") {
+        localStorage.setItem("admin_session", JSON.stringify({ email, loginTime: new Date().toISOString() }));
+        toast.success("Login successful! Redirecting...");
+        router.push("/admin/dashboard");
+      } else {
+        toast.error("Invalid email or password.");
+        setError("Invalid credentials. Try the demo credentials.");
+        setIsLoading(false);
+      }
+    }, 1000);
   };
 
   return (
@@ -37,8 +45,8 @@ export default function LoginPage() {
         <div className="flex flex-col items-center mb-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           <Link href="/">
             <Image 
-              src="/images/tsu-logo.png" 
-              alt="Taraba State University Logo" 
+              src={appLogo} 
+              alt="Logo" 
               width={80} 
               height={80} 
               className="object-contain hover:scale-105 transition-transform duration-300"
@@ -80,7 +88,7 @@ export default function LoginPage() {
                       className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-100 transition-colors" 
                       type="button" 
                       title="Copy username"
-                      onClick={() => setUsername("info@tarabastate.gov")}
+                      onClick={() => setEmail("info@tarabastate.gov")}
                     >
                       <Copy className="h-3.5 w-3.5" />
                     </button>
@@ -117,8 +125,8 @@ export default function LoginPage() {
                 <input 
                   type="text" 
                   id="username" 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm" 
                   placeholder="info@tarabastate.gov" 
                   required 

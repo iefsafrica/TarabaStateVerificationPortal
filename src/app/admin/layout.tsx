@@ -21,6 +21,8 @@ import {
   Settings
 } from "lucide-react";
 
+import { useAppConfig } from "@/components/AppConfigContext";
+
 export default function AdminLayout({
   children,
 }: {
@@ -28,6 +30,7 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { appName, appLogo } = useAppConfig();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
@@ -139,14 +142,14 @@ export default function AdminLayout({
         <div className="h-20 flex items-center justify-between px-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <Image 
-              src="/images/tsu-logo.png" 
+              src={appLogo} 
               alt="Logo" 
               width={36} 
               height={36} 
               className="object-contain"
             />
             <span className="font-bold text-base text-gray-900 leading-tight">
-              TSU Staff Portal
+              {appName}
             </span>
           </div>
           <button 
@@ -164,56 +167,56 @@ export default function AdminLayout({
             const isActive = pathname === item.href || (item.subItems && item.subItems.some(sub => pathname === sub.href));
 
             return (
-              <div key={item.name} className="space-y-1">
-                {item.href ? (
-                  <Link 
-                    href={item.href}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors group ${
-                      pathname === item.href 
-                        ? "bg-[#EDF7F2] text-green-800 font-medium" 
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <item.icon className={`h-5 w-5 ${isActive ? "text-green-700" : "text-gray-400 group-hover:text-gray-600"}`} />
-                      <span className="text-base">{item.name}</span>
-                    </div>
-                  </Link>
-                ) : (
-                  <button 
+              <div key={item.name}>
+                {hasSubmenu ? (
+                  <button
                     onClick={() => toggleMenu(item.name)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors group ${
-                      isActive 
-                        ? "bg-[#EDF7F2] text-green-800 font-medium" 
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    }`}
+                    className={`
+                      w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200
+                      ${isActive ? "bg-green-50 text-[#00894F]" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
+                    `}
                   >
                     <div className="flex items-center gap-3">
-                      <item.icon className={`h-5 w-5 ${isActive ? "text-green-700" : "text-gray-400 group-hover:text-gray-600"}`} />
-                      <span className="text-base">{item.name}</span>
+                      <item.icon className={`h-5 w-5 ${isActive ? "text-[#00894F]" : "text-gray-400"}`} />
+                      <span>{item.name}</span>
                     </div>
-                    {hasSubmenu && (
-                      <ChevronDown className={`h-4 w-4 transition-transform ${isMenuOpen ? "rotate-180" : ""} ${isActive ? "text-green-700" : "text-gray-400"}`} />
-                    )}
+                    <ChevronDown 
+                      className={`h-4 w-4 transition-transform duration-200 ${isMenuOpen ? "transform rotate-180" : ""}`} 
+                    />
                   </button>
+                ) : (
+                  <Link
+                    href={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`
+                      flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200
+                      ${isActive ? "bg-green-50 text-[#00894F]" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
+                    `}
+                  >
+                    <item.icon className={`h-5 w-5 ${isActive ? "text-[#00894F]" : "text-gray-400"}`} />
+                    <span>{item.name}</span>
+                  </Link>
                 )}
 
-                {/* Submenu Items */}
-                {hasSubmenu && isMenuOpen && item.subItems && (
-                  <div className="ml-9 mt-1 space-y-1 border-l-2 border-gray-100 pl-4 py-1">
-                    {item.subItems.map((subItem) => (
-                      <Link
-                        key={subItem.name}
-                        href={subItem.href}
-                        className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                          pathname === subItem.href
-                            ? "bg-[#EDF7F2] text-green-800 font-medium"
-                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                        }`}
-                      >
-                        {subItem.name}
-                      </Link>
-                    ))}
+                {/* Submenu */}
+                {hasSubmenu && isMenuOpen && (
+                  <div className="mt-1 ml-9 space-y-1">
+                    {item.subItems!.map((subItem) => {
+                      const isSubActive = pathname === subItem.href;
+                      return (
+                        <Link
+                          key={subItem.name}
+                          href={subItem.href}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className={`
+                            block px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200
+                            ${isSubActive ? "bg-green-100/50 text-[#00894F]" : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"}
+                          `}
+                        >
+                          {subItem.name}
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -221,32 +224,38 @@ export default function AdminLayout({
           })}
         </nav>
 
+        {/* User Info at Bottom of Sidebar */}
         <div className="p-4 border-t border-gray-100">
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2.5 w-full text-gray-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors group"
-          >
-            <LogOut className="h-4 w-4 text-gray-400 group-hover:text-red-600" />
-            <span className="text-sm font-medium">Logout</span>
-          </button>
+          <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-green-100 text-[#00894F] flex items-center justify-center font-bold text-sm">
+                SA
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-sm font-semibold text-gray-900 truncate">Super Admin</p>
+                <p className="text-xs text-gray-500 truncate">admin@taraba.gov.ng</p>
+              </div>
+            </div>
+          </div>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Header */}
         <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-4 md:px-8">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <button 
-              className="md:hidden p-2 text-gray-600 hover:bg-gray-50 rounded-lg mr-1"
+              className="md:hidden text-gray-500 hover:text-gray-700"
               onClick={() => setIsMobileMenuOpen(true)}
             >
               <Menu className="h-6 w-6" />
             </button>
+
             <div>
               <h1 className="text-xl font-bold text-gray-900">
                 {pathname === "/admin/dashboard" && "Dashboard"}
-                {pathname === "/admin/employees" && "Employee"}
+                {pathname === "/admin/employees" && "Employee Records"}
                 {pathname === "/admin/files" && "File Manager"}
                 {pathname === "/admin/documents" && "Official Documents"}
                 {pathname === "/admin/roles" && "Roles"}
@@ -254,7 +263,7 @@ export default function AdminLayout({
                 {pathname === "/admin/settings" && "Settings"}
                 {pathname === "/admin/profile" && "My Profile"}
               </h1>
-              <p className="text-xs text-gray-500">Taraba State Verification Portal</p>
+              <p className="text-xs text-gray-500">{appName}</p>
             </div>
           </div>
           
@@ -368,10 +377,10 @@ export default function AdminLayout({
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-8">
+        <div className="flex-1 overflow-auto p-4 md:p-8">
           {children}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

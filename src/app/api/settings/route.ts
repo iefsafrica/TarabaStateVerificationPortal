@@ -3,6 +3,8 @@ import prisma from "@/lib/db";
 import nodemailer from "nodemailer";
 
 const SETTINGS_KEYS = [
+  "app_name",
+  "app_logo",
   "email_enabled",
   "smtp_host",
   "smtp_port",
