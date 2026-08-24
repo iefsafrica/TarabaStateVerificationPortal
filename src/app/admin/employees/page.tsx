@@ -319,7 +319,8 @@ export default function EmployeesPage() {
                         
                         const empData: any = {};
                         headers.forEach((key: string, idx: number) => {
-                          const val = values[idx] != null ? String(values[idx]).trim() : "";
+                          const rawVal = values[idx];
+                          const val = rawVal != null ? String(rawVal).trim() : "";
                           
                           if (key === "fullname") {
                              const parts = val.split(" ");
@@ -328,10 +329,12 @@ export default function EmployeesPage() {
                           }
                           else if (key === "emailaddress" || key === "email") empData.email = val;
                           else if (key === "currentstationnameofschool" || key.includes("currentstation")) empData.currentStation = val;
-                          else if (key === "lga") empData.lga = val;
                           else if (key === "sex" || key === "gender") empData.gender = val;
                           else if (key === "cadre") empData.cadre = val;
-                          else if (key === "dateofbirth" || key === "dob") empData.birthdate = val;
+                          else if (key === "dateofbirth" || key === "dob") {
+                            // Store raw value; serial fix applied after loop
+                            empData._rawBirthdate = rawVal;
+                          }
                           else if (key === "dateoflastpromotion") empData.dateOfLastPromotion = val;
                           else if (key === "localgovernmentoforigin" || key === "lgaoforigin") empData.lgaOfOrigin = val;
                           else if (key === "ntionality" || key === "nationality") empData.nationality = val;
@@ -344,18 +347,124 @@ export default function EmployeesPage() {
                           else if (key === "bank" || key === "bankname") empData.bankName = val;
                           else if (key === "accountnumber") empData.accountNumber = val;
                           else if (key === "bvn") empData.bvn = val;
-                          else if (key === "nin") empData.nin = val;
+                          else if (key === "nin" || key === "nationalidentificationnumber") empData.nin = val;
                           else if (key === "lgastandardized") empData.standardizedLga = val;
                           else if (key === "sexstandardized") empData.standardizedSex = val;
                           else if (key === "cadrestandardized") empData.standardizedCadre = val;
                           else if (key === "duplicateflag") empData.duplicateFlag = val;
                           else if (key === "sharedidentifierflag") empData.sharedIdentifierFlag = val;
-                          else if (key === "firstname") empData.firstName = val;
-                          else if (key === "lastname") empData.lastName = val;
+                          else if (key === "firstname" || key === "first name") empData.firstName = val;
+                          else if (key === "lastname" || key === "surname" || key === "last name") empData.lastName = val;
+
+                          // ── Health Facilities columns ──────────────────────────────
+                          else if (key === "othername" || key === "other name") empData.middleName = val;
+                          else if (key === "maidenname" || key === "maiden name") empData.maidenName = val;
+                          else if (key === "title") empData.title = val;
+                          else if (key === "maritalstatus" || key === "marital status") empData.maritalStatus = val;
+                          else if (key === "areyounigerian" || key === "are you a nigerian" || key === "areyouanigeri") empData.areYouNigerian = val;
+                          else if (key === "state") empData.stateOfOrigin = empData.stateOfOrigin || val;
+                          else if (key === "lga") empData.lga = val;
+                          else if (key === "senatorialwardoforigin" || key === "senatorial ward of origin") empData.senatoralWardOfOrigin = val;
+                          else if (key === "wardoforigin" || key === "ward of origin") empData.wardOfOrigin = val;
+                          else if (key === "country") empData.country = val;
+                          else if (key === "fileempno" || key === "fileno" || key === "file emp no" || key === "empno") empData.fileNo = val;
+                          else if (key === "stateofresident" || key === "stateofresidence" || key === "state of res") empData.stateOfResidence = val;
+                          else if (key === "lgaofresidence" || key === "lga of re" || key === "lgaofres") empData.lga = empData.lga || val;
+                          else if (key === "address" || key === "residentialaddress" || key === "ad") empData.residentialAddress = val;
+                          else if (key === "mobileno" || key === "mobile n" || key === "mobilenumber") empData.mobileNo = val;
+                          else if (key === "telephone" || key === "telephon") empData.telephone = empData.telephone || val;
+                          else if (key === "permanentaddress" || key === "permane" || key === "state perri") empData.permanentAddress = val;
+                          else if (key === "permanentstate" || key === "permne") empData.permanentState = val;
+                          else if (key === "permanentlga" || key === "lga permne" || key === "lgaperm") empData.permanentLga = val;
+                          // Next of Kin
+                          else if (key === "nextofkinrelationship" || key === "next of kn") empData.nokRelationship = val;
+                          else if (key === "nextofkinname" || key === "next of knext of k") empData.nokName = val;
+                          else if (key === "nextofkinphone" || key === "nextofkin r") empData.nokPhone = val;
+                          else if (key === "nextofkinaddress") empData.nokAddress = val;
+                          // Education
+                          else if (key === "institution" || key.includes("institution")) empData.educationalBackground = val;
+                          else if (key === "certificate" || key.includes("certificate")) empData.certifications = val;
+                          else if (key === "dateofgraduation" || key === "date of graduation") empData.dateOfGraduation = val;
+                          // Professional Registration
+                          else if (key === "mdcn" || key === "mdcnr" || key === "mdcnrothers" || key.includes("professio")) empData.mdcnRegNo = val;
+                          else if (key === "practitioner" || key.includes("practiti")) empData.practitionerType = val;
+                          else if (key === "nursespecialization" || key.includes("nursespe") || key.includes("nurse special")) empData.nurseSpecialization = val;
+                          else if (key === "issuancedate" || key === "issuance date") empData.licenseIssuanceDate = val;
+                          // Appointment
+                          else if (key === "appointmenttype" || key === "additional" || key.includes("appointn")) empData.appointmentType = val;
+                          else if (key === "presentposting" || key.includes("present f") || key === "present posting") empData.presentPosting = val;
+                          else if (key === "currentgradelevel" || key === "current grade") empData.gradeLevel = empData.gradeLevel || val;
+                          else if (key === "currentstep" || key === "current step") empData.step = val;
+                          else if (key === "dateoffirstappointment" || key === "date of first appointment") {
+                            empData._rawDateFirstAppt = rawVal;
+                          }
+                          else if (key === "dateofconfirmation" || key === "date of confirmation") {
+                            empData._rawDateConfirm = rawVal;
+                          }
+                          else if (key === "dateofpresentappointment" || key === "date of present appointment") {
+                            empData._rawDatePresentAppt = rawVal;
+                          }
+                          // Facility
+                          else if (key === "secondary" || key === "facilityname" || key === "facility name") empData.facilityName = val;
+                          else if (key === "facilitytype" || key === "facility type") empData.facilityType = val;
+                          else if (key === "department" || key === "departm") empData.department = val;
+                          else if (key === "branch" || key.includes("branch")) empData.branch = val;
+                          // Submission metadata
+                          else if (key === "uuid" || key === "submissionid" || key === "l_id") empData.submissionId = val;
+                          else if (key === "validation" || key === "validati") empData.validationStatus = val;
+                          else if (key === "notes") empData.importNotes = val;
+                          else if (key === "_status" || key === "submitte") empData.importSource = val; // save as source, not status
+                          else if (key === "_version" || key === "version") empData.importVersion = val;
+                          else if (key === "tags") empData.importTags = val;
                           else {
                              empData[key] = val; // fallback
                           }
                         });
+
+                        // ── Helper: safely parse a date (string or Excel serial) ──────
+                        const safeParseDate = (raw: any): string | null => {
+                          if (raw == null || raw === "") return null;
+                          const asNum = Number(raw);
+                          if (!isNaN(asNum) && asNum > 0 && asNum < 100000) {
+                            // Excel serial number → use XLSX date util
+                            const d = XLSX.SSF.parse_date_code(asNum);
+                            if (d && d.y > 1900 && d.y < 2100) {
+                              return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+                            }
+                            return null;
+                          }
+                          const d = new Date(String(raw));
+                          return (!isNaN(d.getTime()) && d.getFullYear() > 1900 && d.getFullYear() < 2100)
+                            ? d.toISOString().split("T")[0]
+                            : null;
+                        };
+
+                        // ── Fix all date fields ───────────────────────────────────────
+                        empData.birthdate = safeParseDate(empData._rawBirthdate);
+                        empData.dateOfFirstAppointment = safeParseDate(empData._rawDateFirstAppt);
+                        empData.dateOfConfirmation = safeParseDate(empData._rawDateConfirm);
+                        empData.dateOfPresentAppointment = safeParseDate(empData._rawDatePresentAppt);
+                        // Clean up temp keys
+                        delete empData._rawBirthdate;
+                        delete empData._rawDateFirstAppt;
+                        delete empData._rawDateConfirm;
+                        delete empData._rawDatePresentAppt;
+
+                        // ── Always force status to Pending ────────────────────────────
+                        empData.status = "Pending";
+
+                        // ── Auto-detect ministry from cadre/department ───────────────
+                        if (!empData.ministry) {
+                          const healthKeywords = ["nurse", "doctor", "medical", "health", "pharmacist", "laboratory", "midwif", "dental", "community health", "administrative professional", "hospital admin", "clinical"];
+                          const cadreStr = (empData.cadre || "").toLowerCase();
+                          const deptStr = (empData.department || "").toLowerCase();
+                          if (healthKeywords.some(h => cadreStr.includes(h) || deptStr.includes(h))) {
+                            empData.ministry = "Health";
+                            if (!empData.department || empData.department === "Unassigned") empData.department = "Health Facilities";
+                          } else if (empData.currentStation || empData.subjectTaught) {
+                            empData.ministry = "Education";
+                          }
+                        }
 
                         // Provide dummy email if missing or if it's a generic placeholder like "none", "n/a", "-"
                         const emailVal = (empData.email || "").toLowerCase();
@@ -375,12 +484,14 @@ export default function EmployeesPage() {
                            });
                            
                            if (res.ok) {
-                             imported++;
-                           } else {
-                             const err = await res.json();
-                             lastApiError = JSON.stringify(err);
-                             console.error("Import error for row", i, err);
-                           }
+                              imported++;
+                            } else {
+                              const rawText = await res.text();
+                              let errMsg = rawText;
+                              try { errMsg = JSON.stringify(JSON.parse(rawText)); } catch {}
+                              lastApiError = errMsg.substring(0, 300);
+                              console.error("Import error for row", i, lastApiError);
+                            }
                         }
                       }
                       

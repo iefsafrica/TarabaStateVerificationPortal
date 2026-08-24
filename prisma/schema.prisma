@@ -29,6 +29,9 @@ model Employee {
   documentCount Int      @default(0)
   documents     Document[]
 
+  // Ministry Categorization
+  ministry           String?   // "Education", "Health", "Other"
+
   // Personal Details
   middleName         String?
   title              String?
@@ -76,12 +79,13 @@ model Employee {
   // Education
   educationalBackground String?
   certifications        String?
+  dateOfGraduation      String?   // Date of Graduation
 
   // Verification
   ninVerified   Boolean  @default(false)
   ninData       Json?
 
-  // Teacher CSV Import Fields
+  // Teacher CSV Import Fields (Ministry of Education)
   currentStation         String?
   dateOfLastPromotion    String?
   lgaOfOrigin            String?
@@ -94,6 +98,44 @@ model Employee {
   standardizedCadre      String?
   duplicateFlag          String?
   sharedIdentifierFlag   String?
+
+  // Health Facilities CSV Import Fields (Ministry of Health)
+  maidenName             String?   // Maiden Name
+  areYouNigerian         String?   // Are you a Nigerian? (Yes/No)
+  senatoralWardOfOrigin  String?   // Senatorial Ward of Origin
+  wardOfOrigin           String?   // Ward of Origin
+  country                String?   // Country
+  mobileNo               String?   // Mobile Number (separate from telephone)
+  permanentAddress       String?   // Permanent Address
+  permanentState         String?   // Permanent State
+  permanentLga           String?   // Permanent LGA
+
+  // Health Professional Registration
+  mdcnRegNo              String?   // MDCN/R/OTHERS - Medical Council Reg No
+  professionalRegBody    String?   // e.g. MDCN, NMC, MLSCN, RRBN etc.
+  professionalRegNo      String?   // Registration number with body
+  licenseIssuanceDate    String?   // License/Certificate issuance date
+  nurseSpecialization    String?   // e.g. Registered_Nurse, Other nurse specialization
+  practitionerType       String?   // e.g. MEDICAL, Nursing & Midwifery
+
+  // Health Facility Appointment Details
+  appointmentType        String?   // e.g. PERMANENT, Contract, etc.
+  presentPosting         String?   // Present posting (PRINCIPAL, PEO1, SN1, Staff Nurse, etc.)
+  dateOfConfirmation     DateTime? // Date of Confirmation
+  dateOfPresentAppointment DateTime? // Date of Present Appointment
+
+  // Facility Info
+  facilityName           String?   // e.g. Bambur General Hospital, Abubakar Barde First Referral
+  facilityType           String?   // e.g. Secondary (hospital tier)
+  branch                 String?   // Branch/Unit within facility
+
+  // Submission / Import Metadata
+  submissionId           String?   // uuid / submission id from source system
+  validationStatus       String?   // validation field from source data
+  importNotes            String?   // notes column from source data
+  importSource           String?   // e.g. "submitted_via_web"
+  importVersion          String?   // _version from source
+  importTags             String?   // tags from source
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

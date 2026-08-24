@@ -67,7 +67,11 @@ export async function POST(request: Request) {
         department: data.department || "Unassigned",
         position: data.position || "Staff",
         status: data.status || "Pending",
-        
+
+        // Ministry Categorization
+        ministry: data.ministry,
+
+        // Personal Details
         middleName: data.middleName,
         title: data.title,
         telephone: data.telephone,
@@ -80,12 +84,14 @@ export async function POST(request: Request) {
         stateOfResidence: data.stateOfResidence,
         lga: data.lga,
         profession: data.profession,
-        
+
+        // Next of Kin
         nokName: data.nokName,
         nokRelationship: data.nokRelationship,
         nokPhone: data.nokPhone,
         nokAddress: data.nokAddress,
-        
+
+        // Employment Record
         employmentId: data.employmentId,
         serviceNo: data.serviceNo,
         fileNo: data.fileNo,
@@ -93,27 +99,32 @@ export async function POST(request: Request) {
         organization: data.organization,
         employmentType: data.employmentType,
         probationPeriod: data.probationPeriod,
-        
+
+        // Employment Details
         workLocation: data.workLocation,
         dateOfFirstAppointment: data.dateOfFirstAppointment ? new Date(data.dateOfFirstAppointment) : null,
         salaryStructure: data.salaryStructure,
         gradeLevel: data.gradeLevel,
         step: data.step,
         cadre: data.cadre,
-        
+
+        // Banking and Pension
         bankName: data.bankName,
         accountNumber: data.accountNumber,
         nuban: data.nuban,
         pfaName: data.pfaName,
         rsaPin: data.rsaPin,
-        
+
+        // Education
         educationalBackground: data.educationalBackground,
         certifications: data.certifications,
+        dateOfGraduation: data.dateOfGraduation,
 
+        // Verification
         ninVerified: data.ninVerified || false,
         ninData: data.ninData || null,
 
-        // Teacher CSV Import Fields
+        // Teacher CSV Import Fields (Ministry of Education)
         currentStation: data.currentStation,
         dateOfLastPromotion: data.dateOfLastPromotion,
         lgaOfOrigin: data.lgaOfOrigin,
@@ -126,6 +137,44 @@ export async function POST(request: Request) {
         standardizedCadre: data.standardizedCadre,
         duplicateFlag: data.duplicateFlag,
         sharedIdentifierFlag: data.sharedIdentifierFlag,
+
+        // Health Facilities CSV Import Fields (Ministry of Health)
+        maidenName: data.maidenName,
+        areYouNigerian: data.areYouNigerian,
+        senatoralWardOfOrigin: data.senatoralWardOfOrigin,
+        wardOfOrigin: data.wardOfOrigin,
+        country: data.country,
+        mobileNo: data.mobileNo,
+        permanentAddress: data.permanentAddress,
+        permanentState: data.permanentState,
+        permanentLga: data.permanentLga,
+
+        // Health Professional Registration
+        mdcnRegNo: data.mdcnRegNo,
+        professionalRegBody: data.professionalRegBody,
+        professionalRegNo: data.professionalRegNo,
+        licenseIssuanceDate: data.licenseIssuanceDate,
+        nurseSpecialization: data.nurseSpecialization,
+        practitionerType: data.practitionerType,
+
+        // Health Facility Appointment Details
+        appointmentType: data.appointmentType,
+        presentPosting: data.presentPosting,
+        dateOfConfirmation: data.dateOfConfirmation ? new Date(data.dateOfConfirmation) : null,
+        dateOfPresentAppointment: data.dateOfPresentAppointment ? new Date(data.dateOfPresentAppointment) : null,
+
+        // Facility Info
+        facilityName: data.facilityName,
+        facilityType: data.facilityType,
+        branch: data.branch,
+
+        // Submission / Import Metadata
+        submissionId: data.submissionId,
+        validationStatus: data.validationStatus,
+        importNotes: data.importNotes,
+        importSource: data.importSource,
+        importVersion: data.importVersion,
+        importTags: data.importTags,
       },
     });
 
