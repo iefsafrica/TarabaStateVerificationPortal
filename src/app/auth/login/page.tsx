@@ -25,7 +25,10 @@ export default function LoginPage() {
     setIsLoading(true);
 
     setTimeout(() => {
-      if (email === "admin@taraba.gov.ng" && password === "admin123") {
+      if (
+        (email === "admin@taraba.gov.ng" && password === "admin123") ||
+        (email === "info@tarabastate.gov" && password === "Admin@webmaster$1")
+      ) {
         localStorage.setItem("admin_session", JSON.stringify({ email, loginTime: new Date().toISOString() }));
         toast.success("Login successful! Redirecting...");
         router.push("/admin/dashboard");
