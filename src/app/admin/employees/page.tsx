@@ -16,7 +16,8 @@ import {
   Loader2,
   Settings,
   Upload,
-  Trash2
+  Trash2,
+  X
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -44,6 +45,12 @@ export default function EmployeesPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Export Modal State
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportStatus, setExportStatus] = useState("Active"); // Default to Active/Verified
+  const [exportPeriod, setExportPeriod] = useState("All Time");
+  const [isExporting, setIsExporting] = useState(false);
 
   // Fetch employees data
   const fetchEmployees = async () => {
@@ -134,6 +141,68 @@ export default function EmployeesPage() {
       }
     } catch (err) {
       toast.error("An error occurred.", { id: "clear" });
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      setIsExporting(true);
+      toast.loading("Generating report...", { id: "export" });
+      const res = await fetch(`/api/employees/export?status=${encodeURIComponent(exportStatus)}&period=${encodeURIComponent(exportPeriod)}`);
+      const json = await res.json();
+      
+      if (!json.success) {
+        toast.error(`Export failed: ${json.error}`, { id: "export" });
+        return;
+      }
+
+      const data = json.data;
+      if (!data || data.length === 0) {
+        toast.error("No records found for the selected criteria.", { id: "export" });
+        return;
+      }
+
+      // Convert to Excel
+      const XLSX = await import("xlsx");
+      
+      // Select fields to export
+      const exportData = data.map((emp: any) => ({
+        "Registration Number": emp.registrationNo || emp.nin,
+        "First Name": emp.firstName,
+        "Middle Name": emp.middleName,
+        "Last Name": emp.lastName,
+        "Email": emp.email,
+        "Phone": emp.phone || emp.telephone,
+        "Gender": emp.gender,
+        "Date of Birth": emp.birthdate ? new Date(emp.birthdate).toLocaleDateString() : "",
+        "State of Origin": emp.stateOfOrigin,
+        "LGA of Origin": emp.lgaOfOrigin,
+        "Department": emp.department,
+        "Position / Designation": emp.designation || emp.position,
+        "Grade Level": emp.grade || emp.gradeLevel,
+        "Status": emp.status,
+        "NIN Verified": emp.ninVerified ? "Yes" : "No",
+        "Date Verified / Updated": new Date(emp.updatedAt).toLocaleDateString(),
+        "Date of First Appointment": emp.dateOfFirstAppointment ? new Date(emp.dateOfFirstAppointment).toLocaleDateString() : "",
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Staff Report");
+      
+      // Generate filename
+      const safeStatus = exportStatus.replace(" ", "_");
+      const safePeriod = exportPeriod.replace(" ", "_");
+      const fileName = `Taraba_Staff_Report_${safeStatus}_${safePeriod}_${new Date().toISOString().split("T")[0]}.xlsx`;
+      
+      XLSX.writeFile(workbook, fileName);
+      toast.success("Report exported successfully!", { id: "export" });
+      setShowExportModal(false);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("An error occurred during export.", { id: "export" });
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -531,7 +600,10 @@ export default function EmployeesPage() {
                   <Plus className="h-4 w-4" />
                   Add Employee
                 </Link>
-                <button className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm text-sm">
+                <button 
+                  onClick={() => setShowExportModal(true)}
+                  className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm text-sm"
+                >
                   <Download className="h-4 w-4" />
                   Export
                 </button>
@@ -690,9 +762,76 @@ export default function EmployeesPage() {
 
       {/* Footer */}
       <div className="pt-10 pb-6 flex items-center justify-center gap-3 text-sm text-gray-500">
-        {/* We can skip the logo here or use useAppConfig if needed. I'll just remove the hardcoded logo and text and make it generic or use window config if I want, but since I don't have useAppConfig here, I'll just remove it or keep it simple */}
-        <p>© 2026 Admin Dashboard. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} Admin Dashboard. All rights reserved.</p>
       </div>
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl border border-gray-100 overflow-hidden animate-fade-in-up">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <h2 className="font-bold text-gray-900 flex items-center gap-2">
+                <Download className="h-5 w-5 text-[#00894F]" />
+                Export Staff Report
+              </h2>
+              <button 
+                onClick={() => setShowExportModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Staff Status</label>
+                <select 
+                  value={exportStatus}
+                  onChange={(e) => setExportStatus(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F]/20 focus:border-[#00894F] bg-white"
+                >
+                  <option value="All">All Staff</option>
+                  <option value="Active">Approved / Active Staff</option>
+                  <option value="Self-Verified">Self-Verified (Pending Admin)</option>
+                  <option value="Pending">Pending (Unverified)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Time Period</label>
+                <select 
+                  value={exportPeriod}
+                  onChange={(e) => setExportPeriod(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F]/20 focus:border-[#00894F] bg-white"
+                >
+                  <option value="All Time">All Time</option>
+                  <option value="Today">Today</option>
+                  <option value="This Week">This Week</option>
+                  <option value="This Month">This Month</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Filters based on when the staff record was last updated or verified.</p>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+              <button 
+                onClick={() => setShowExportModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleExportData}
+                disabled={isExporting}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#00894F] text-white rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-70 transition-colors"
+              >
+                {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                {isExporting ? "Generating..." : "Download Excel"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

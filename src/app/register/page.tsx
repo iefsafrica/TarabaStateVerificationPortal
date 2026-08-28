@@ -31,6 +31,7 @@ type FormData = {
   dateOfEmployment: string;
   grade: string;
   documents: File[];
+  photo: string;
   ninData?: Record<string, string>;
 };
 
@@ -38,7 +39,7 @@ const initialData: FormData = {
   bvn: "", nin: "", firstName: "", lastName: "", middleName: "",
   email: "", phone: "", dateOfBirth: "", gender: "", address: "",
   department: "", designation: "", employeeId: "", dateOfEmployment: "",
-  grade: "", documents: [],
+  grade: "", documents: [], photo: "",
 };
 
 type SubmittedRegistration = {
@@ -465,7 +466,65 @@ export default function RegisterPage() {
                 <h2 className="text-2xl font-bold text-green-700 mb-2">Step 4: Document Upload</h2>
                 <p className="text-slate-500 mb-6 text-sm">Upload supporting documents for identity and employment verification.</p>
                 <div className="space-y-4">
-                  {["Passport Photograph", "Letter of First Appointment", "National ID / Voter's Card / Driver's License"].map(docType => (
+                  {/* Passport Photo Upload */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-900">Passport Photograph</div>
+                        <div className="text-xs text-slate-400 mt-0.5">JPG, PNG (max 5MB)</div>
+                      </div>
+                      {formData.photo && (
+                        <div className="flex items-center gap-2 text-xs text-green-600 font-medium">
+                          <CheckCircle2 className="h-4 w-4" /> Uploaded
+                        </div>
+                      )}
+                    </div>
+                    {formData.photo && (
+                      <div className="mb-4">
+                        <img src={formData.photo} alt="Passport Preview" className="w-24 h-24 object-cover rounded-lg border border-slate-300" />
+                      </div>
+                    )}
+                    <label className="flex items-center justify-center w-full bg-white border-2 border-dashed border-slate-300 rounded-xl px-4 py-6 cursor-pointer hover:border-green-400 transition-all group">
+                      <div className="text-center">
+                        <div className="text-sm font-medium text-green-600 group-hover:underline">
+                          {formData.photo ? "Change Photo" : "Click to Upload Photo"}
+                        </div>
+                      </div>
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        accept=".jpg,.jpeg,.png"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 5 * 1024 * 1024) {
+                            toast.error("File is too large (max 5MB)");
+                            return;
+                          }
+                          const uploadData = new FormData();
+                          uploadData.append("file", file);
+                          const uploadPromise = fetch("/api/settings/upload", {
+                            method: "POST",
+                            body: uploadData,
+                          }).then(res => res.json());
+
+                          toast.promise(uploadPromise, {
+                            loading: "Uploading photo...",
+                            success: (data) => {
+                              if (data.success && data.url) {
+                                update("photo", data.url);
+                                return "Photo uploaded successfully!";
+                              }
+                              throw new Error(data.error || "Upload failed");
+                            },
+                            error: "Failed to upload photo"
+                          });
+                        }} 
+                      />
+                    </label>
+                  </div>
+
+                  {["Letter of First Appointment", "National ID / Voter's Card / Driver's License"].map(docType => (
                     <label key={docType} className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 cursor-pointer hover:border-green-400 transition-all group">
                       <div>
                         <div className="text-sm font-semibold text-slate-900">{docType}</div>
@@ -503,6 +562,7 @@ export default function RegisterPage() {
                     { label: "Phone", value: formData.phone || "—" },
                     { label: "Date of Birth", value: formData.dateOfBirth || "—" },
                     { label: "Gender", value: formData.gender || "—" },
+                    { label: "Photo", value: formData.photo ? "✅ Uploaded" : "❌ Missing" },
                   ]} />
                   <ReviewSection title="Employment" items={[
                     { label: "Employee ID", value: formData.employeeId || "—" },

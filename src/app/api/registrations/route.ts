@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       bvn, nin, firstName, lastName, middleName,
       email, phone, dateOfBirth, gender, address,
       department, designation, employeeId, grade,
-      dateOfEmployment, ninVerified
+      dateOfEmployment, ninVerified, photo
     } = body;
 
     if (!firstName || !lastName || !email) {
@@ -105,6 +105,7 @@ export async function POST(request: Request) {
         email, phone, dateOfBirth, gender, address,
         department, designation, employeeId, grade,
         dateOfEmployment, ninVerified: !!ninVerified,
+        photo,
         status: "Pending",
       }
     });

@@ -39,6 +39,7 @@ export default function ManageEmployeePage() {
 
   // Form State
   const [formData, setFormData] = useState({
+    photo: "",
     firstName: "",
     lastName: "",
     middleName: "",
@@ -144,6 +145,7 @@ export default function ManageEmployeePage() {
           };
 
           setFormData({
+            photo: emp.photo || "",
             firstName: emp.firstName || "",
             lastName: emp.lastName || "",
             middleName: emp.middleName || "",
@@ -346,6 +348,60 @@ export default function ManageEmployeePage() {
             <h2 className="text-base font-semibold text-gray-900">Personal Details</h2>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="col-span-1 md:col-span-2 lg:col-span-3 flex items-center gap-6 mb-2">
+              <div className="shrink-0">
+                <label className="w-24 h-24 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden relative cursor-pointer hover:border-green-400 transition-all">
+                  {formData.photo ? (
+                    <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs text-gray-400 font-medium text-center leading-tight px-1">{isEditing ? "Upload\nPhoto" : "No Photo"}</span>
+                  )}
+                  {isEditing && (
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error("File is too large (max 5MB)");
+                          return;
+                        }
+                        const uploadData = new FormData();
+                        uploadData.append("file", file);
+                        const uploadPromise = fetch("/api/settings/upload", {
+                          method: "POST",
+                          body: uploadData,
+                        }).then(res => res.json());
+
+                        toast.promise(uploadPromise, {
+                          loading: "Uploading photo...",
+                          success: (data) => {
+                            if (data.success && data.url) {
+                              setFormData(prev => ({ ...prev, photo: data.url }));
+                              return "Photo uploaded successfully!";
+                            }
+                            throw new Error(data.error || "Upload failed");
+                          },
+                          error: "Failed to upload photo"
+                        });
+                      }}
+                    />
+                  )}
+                </label>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Employee Photo</h3>
+                <p className="text-xs text-gray-500 mt-1">Passport-sized photograph.</p>
+                {isEditing && (
+                  <div className="mt-2 text-xs font-semibold text-green-600 cursor-pointer">
+                    Click the circle to upload
+                  </div>
+                )}
+              </div>
+            </div>
+
             <InputGroup label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Enter first name" required />
             <InputGroup label="Surname" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Enter surname" required />
             <InputGroup label="Middle Name" name="middleName" value={formData.middleName} onChange={handleChange} placeholder="Enter middle name" />

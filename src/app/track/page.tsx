@@ -100,14 +100,21 @@ export default function TrackPage() {
   const [ninData, setNinData] = useState<any>(null); // holds mock data for the form overlay
   const userRef = useState(`emp-${Date.now()}`)[0];
   
-  // Auto-fill form state
+  // Auto-fill & Edit Profile form state
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     middleName: "",
     gender: "",
     birthdate: "",
+    photo: "",
+    phone: "",
+    email: "",
+    department: "",
+    designation: "",
+    grade: "",
   });
 
   const handleSearch = async () => {
@@ -120,6 +127,7 @@ export default function TrackPage() {
     setResult(null);
     setNotFound(false);
     setShowNinModal(false);
+    setIsEditingProfile(false);
     setNinData(null);
 
     try {
@@ -169,13 +177,14 @@ export default function TrackPage() {
             if (data && !data.error) {
               setNinData(data);
               
-              setFormData({
+              setFormData(prev => ({
+                ...prev,
                 firstName: data.firstName || data.firstname || result?.firstName || "",
                 lastName: data.lastName || data.surname || result?.lastName || "",
                 middleName: data.middleName || result?.middleName || "",
                 gender: data.gender || result?.gender || "",
-                birthdate: data.birthdate || data.dob || result?.birthdate || "",
-              });
+                birthdate: data.birthdate || data.dob || (result?.birthdate ? new Date(result.birthdate).toISOString().split('T')[0] : ""),
+              }));
               
               setShowNinModal(true);
               toast.success("NIN Data securely fetched and auto-filled.");
@@ -236,6 +245,68 @@ export default function TrackPage() {
       }
     } catch (err) {
       toast.error("An error occurred during verification saving.");
+    } finally {
+      setIsSubmittingForm(false);
+    }
+  };
+
+  const handleStartEdit = () => {
+    setFormData({
+      firstName: result?.firstName || "",
+      lastName: result?.lastName || "",
+      middleName: result?.middleName || "",
+      gender: result?.gender || "",
+      birthdate: result?.birthdate ? new Date(result.birthdate).toISOString().split('T')[0] : "",
+      photo: (result as any)?.photo || "",
+      phone: result?.phone || "",
+      email: result?.email || "",
+      department: result?.department || "",
+      designation: result?.designation || "",
+      grade: result?.grade || "",
+    });
+    setIsEditingProfile(true);
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!result?.id) {
+      toast.error("Employee ID is missing, cannot update.");
+      return;
+    }
+
+    setIsSubmittingForm(true);
+    try {
+      const res = await fetch(`/api/employees/${result.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          middleName: formData.middleName,
+          gender: formData.gender,
+          birthdate: formData.birthdate,
+          photo: formData.photo,
+          phone: formData.phone,
+          email: formData.email,
+          department: formData.department,
+          designation: formData.designation,
+          grade: formData.grade,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        toast.success("Profile updated successfully!");
+        setIsEditingProfile(false);
+        // Refresh the profile automatically
+        setResult({
+          ...result,
+          ...json.data
+        });
+      } else {
+        toast.error(`Update failed: ${json.error}`);
+      }
+    } catch (err) {
+      toast.error("An error occurred during update.");
     } finally {
       setIsSubmittingForm(false);
     }
@@ -319,7 +390,7 @@ export default function TrackPage() {
       </div>
 
       {/* Result Card */}
-      {result && statusConfig && !showNinModal && (
+      {result && statusConfig && !showNinModal && !isEditingProfile && (
         <div className="w-full max-w-4xl mt-6 space-y-4">
           <div className={`rounded-3xl border p-6 flex items-center gap-4 ${statusConfig.bg} ${statusConfig.border}`}>
             <div className={`p-3 rounded-2xl ${statusConfig.badge}`}>
@@ -370,6 +441,11 @@ export default function TrackPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-0 gap-x-0 divide-y md:divide-y-0 md:divide-x border-b border-slate-100">
                <div className="p-5 flex flex-col gap-4">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1"><UserCircle2 className="w-3 h-3"/> Personal</h3>
+                  {(result as any)?.photo && (
+                    <div className="mb-2 flex justify-center">
+                      <img src={(result as any).photo} alt="Profile Photo" className="w-24 h-24 object-cover rounded-full border-4 border-white shadow-sm" />
+                    </div>
+                  )}
                   <DetailItem icon={<User className="h-4 w-4" />} label="Full Name" value={`${result.firstName} ${result.middleName || ""} ${result.lastName}`.trim()} />
                   <DetailItem icon={<Fingerprint className="h-4 w-4" />} label="Gender" value={result.gender || "—"} />
                   <DetailItem icon={<Calendar className="h-4 w-4" />} label="Date of Birth" value={result.birthdate ? new Date(result.birthdate).toLocaleDateString() : "—"} />
@@ -415,13 +491,195 @@ export default function TrackPage() {
             </div>
           </div>
 
-          <button
-            onClick={() => window.print()}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-white border-2 border-green-600 text-green-700 rounded-2xl font-semibold hover:bg-green-50 transition-colors shadow-sm text-sm"
-          >
-            <Download className="h-4 w-4" />
-            Download Status Report
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => window.print()}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white border-2 border-green-600 text-green-700 rounded-2xl font-semibold hover:bg-green-50 transition-colors shadow-sm text-sm"
+            >
+              <Download className="h-4 w-4" />
+              Download Status Report
+            </button>
+            <button
+              onClick={handleStartEdit}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-green-700 text-white rounded-2xl font-semibold hover:bg-green-800 transition-colors shadow-sm text-sm"
+            >
+              <User className="h-4 w-4" />
+              Update Profile
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile View */}
+      {isEditingProfile && result && (
+        <div className="w-full max-w-4xl mt-6 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up">
+          <div className="px-8 py-6 border-b border-slate-100 bg-[#00894F] text-white flex justify-between items-center">
+            <div>
+              <h2 className="font-bold text-lg">Update Profile</h2>
+              <p className="text-green-100 text-sm opacity-90 mt-1">Keep your information up to date</p>
+            </div>
+            <UserCircle2 className="h-8 w-8 text-green-200 opacity-50" />
+          </div>
+
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Passport Photograph</label>
+                <div className="flex items-center gap-4">
+                  {formData.photo && (
+                    <img src={formData.photo} alt="Profile" className="w-20 h-20 rounded-full object-cover border border-slate-200 shadow-sm" />
+                  )}
+                  <label className="flex items-center justify-center bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl px-4 py-3 cursor-pointer hover:border-green-400 transition-all">
+                    <span className="text-sm font-medium text-green-600">
+                      {formData.photo ? "Change Photo" : "Upload Photo"}
+                    </span>
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept=".jpg,.jpeg,.png"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error("File is too large. Max 5MB.");
+                          return;
+                        }
+                        
+                        const uploadPromise = fetch("/api/upload", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ filename: file.name, contentType: file.type })
+                        })
+                        .then(res => res.json())
+                        .then(async data => {
+                          if (data.url) {
+                            await fetch(data.url, {
+                              method: "PUT",
+                              body: file,
+                              headers: { "Content-Type": file.type }
+                            });
+                            return data.publicUrl;
+                          } else if (data.success && data.fileUrl) {
+                            // Local fallback handler might return fileUrl directly (base64 or local path)
+                            return data.fileUrl;
+                          } else {
+                            // Fallback base64 for local dev if upload API is not fully set up
+                            return new Promise((resolve) => {
+                              const reader = new FileReader();
+                              reader.onload = (e) => resolve(e.target?.result);
+                              reader.readAsDataURL(file);
+                            });
+                          }
+                        });
+
+                        toast.promise(uploadPromise, {
+                          loading: "Uploading photo...",
+                          success: (url) => {
+                            setFormData({ ...formData, photo: url as string });
+                            return "Photo uploaded successfully!";
+                          },
+                          error: "Failed to upload photo"
+                        });
+                      }} 
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">First Name</label>
+                <input
+                  type="text"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Last Name</label>
+                <input
+                  type="text"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Middle Name</label>
+                <input
+                  type="text"
+                  value={formData.middleName}
+                  onChange={(e) => setFormData({...formData, middleName: e.target.value})}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Gender</label>
+                <select
+                  value={formData.gender}
+                  onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none bg-white"
+                >
+                  <option value="">Select...</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Phone Number</label>
+                <input
+                  type="text"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Department</label>
+                <input
+                  type="text"
+                  value={formData.department}
+                  onChange={(e) => setFormData({...formData, department: e.target.value})}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Designation</label>
+                <input
+                  type="text"
+                  value={formData.designation}
+                  onChange={(e) => setFormData({...formData, designation: e.target.value})}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsEditingProfile(false)}
+                className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateProfile}
+                disabled={isSubmittingForm}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#00894F] text-white rounded-xl text-sm font-semibold hover:bg-green-700 disabled:opacity-70 transition-colors shadow-sm"
+              >
+                {isSubmittingForm && <Loader2 className="h-4 w-4 animate-spin" />}
+                Save Changes
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

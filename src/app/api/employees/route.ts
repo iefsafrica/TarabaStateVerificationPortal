@@ -70,6 +70,8 @@ export async function POST(request: Request) {
 
         // Ministry Categorization
         ministry: data.ministry,
+        
+        photo: data.photo,
 
         // Personal Details
         middleName: data.middleName,

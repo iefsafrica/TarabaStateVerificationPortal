@@ -36,12 +36,25 @@ export async function PATCH(
     const { id } = await params;
     const data = await request.json();
     
-    // Process dates safely
     const updateData = { ...data };
-    if (updateData.birthdate) updateData.birthdate = new Date(updateData.birthdate);
-    if (updateData.dateOfFirstAppointment) updateData.dateOfFirstAppointment = new Date(updateData.dateOfFirstAppointment);
     
-    // Don't accidentally override ID
+    // Clean up empty strings and handle dates safely
+    for (const key in updateData) {
+      if (updateData[key] === "") {
+        updateData[key] = null;
+      }
+    }
+    
+    if (updateData.birthdate && typeof updateData.birthdate === "string") updateData.birthdate = new Date(updateData.birthdate);
+    if (updateData.dateOfFirstAppointment && typeof updateData.dateOfFirstAppointment === "string") updateData.dateOfFirstAppointment = new Date(updateData.dateOfFirstAppointment);
+    if (updateData.joinDate && typeof updateData.joinDate === "string") updateData.joinDate = new Date(updateData.joinDate);
+    
+    // Avoid Prisma Json null ambiguity
+    if (updateData.ninData === null) {
+      delete updateData.ninData;
+    }
+
+    // Don't accidentally override system fields
     delete updateData.id;
     delete updateData.createdAt;
     delete updateData.updatedAt;

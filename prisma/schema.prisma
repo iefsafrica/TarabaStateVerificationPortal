@@ -28,6 +28,7 @@ model Employee {
   joinDate      DateTime @default(now())
   documentCount Int      @default(0)
   documents     Document[]
+  photo         String?
 
   // Ministry Categorization
   ministry           String?   // "Education", "Health", "Other"
@@ -226,6 +227,7 @@ model Registration {
   dateOfEmployment String?
   status           String   @default("Pending")
   ninVerified      Boolean  @default(false)
+  photo            String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }

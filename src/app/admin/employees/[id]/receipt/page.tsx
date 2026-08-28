@@ -105,18 +105,29 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
               <p className="text-gray-500 text-sm mt-1">Official Employee Verification Receipt</p>
             </div>
           </div>
-          <div className="flex items-center sm:flex-col sm:items-end justify-between w-full sm:w-auto gap-4">
-            {qrCodeUrl && (
-              <div className="flex flex-col items-center p-1.5 bg-slate-50 border border-slate-200 rounded-xl print:bg-transparent">
-                <img src={qrCodeUrl} alt="Scan QR Code to Verify" className="w-24 h-24 object-contain" />
-                <span className="text-[9px] font-bold text-gray-500 tracking-tight uppercase mt-0.5">Scan to Verify</span>
+          <div className="flex items-center sm:flex-row sm:items-start justify-between w-full sm:w-auto gap-6">
+            {employee.photo && (
+              <div className="flex-shrink-0">
+                <img 
+                  src={employee.photo} 
+                  alt="Employee Photo" 
+                  className="w-28 h-28 object-cover rounded-lg border-2 border-gray-200 shadow-sm print:border-gray-300"
+                />
               </div>
             )}
-            <div className="text-right">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Receipt ID</p>
-              <p className="font-mono font-medium text-gray-800 text-sm">{employee.id.split("-")[0].toUpperCase()}</p>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 mb-1">Date</p>
-              <p className="font-medium text-gray-800 text-sm">{verifiedDate}</p>
+            <div className="flex flex-col items-end gap-3">
+              {qrCodeUrl && (
+                <div className="flex flex-col items-center p-1.5 bg-slate-50 border border-slate-200 rounded-xl print:bg-transparent">
+                  <img src={qrCodeUrl} alt="Scan QR Code to Verify" className="w-20 h-20 object-contain" />
+                  <span className="text-[9px] font-bold text-gray-500 tracking-tight uppercase mt-0.5">Verify</span>
+                </div>
+              )}
+              <div className="text-right">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Receipt ID</p>
+                <p className="font-mono font-medium text-gray-800 text-sm">{employee.id.split("-")[0].toUpperCase()}</p>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 mb-1">Date</p>
+                <p className="font-medium text-gray-800 text-sm">{verifiedDate}</p>
+              </div>
             </div>
           </div>
         </div>

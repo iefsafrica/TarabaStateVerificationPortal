@@ -122,6 +122,10 @@ export default function AdminLayout({
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ];
 
+  if (pathname.includes("/receipt")) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="flex h-screen bg-[#F8FAFC]">
       

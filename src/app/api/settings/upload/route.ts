@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     }
 
     const ext = path.extname(file.name) || ".png";
-    const filename = `logo_${Date.now()}${ext}`;
+    const filename = `upload_${Date.now()}${ext}`;
     const filePath = path.join(uploadsDir, filename);
 
     const bytes = await file.arrayBuffer();
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const url = `/uploads/${filename}`;
     return NextResponse.json({ success: true, url });
   } catch (error) {
-    console.error("Logo upload error:", error);
-    return NextResponse.json({ success: false, error: "Failed to upload logo image" }, { status: 500 });
+    console.error("File upload error:", error);
+    return NextResponse.json({ success: false, error: "Failed to upload image" }, { status: 500 });
   }
 }
