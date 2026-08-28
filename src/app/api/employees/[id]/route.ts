@@ -45,6 +45,20 @@ export async function PATCH(
       }
     }
     
+    // Map mismatched fields from frontend to Prisma schema
+    if ("phone" in updateData) {
+      updateData.telephone = updateData.phone;
+      delete updateData.phone;
+    }
+    if ("designation" in updateData) {
+      updateData.position = updateData.designation;
+      delete updateData.designation;
+    }
+    if ("grade" in updateData) {
+      updateData.gradeLevel = updateData.grade;
+      delete updateData.grade;
+    }
+    
     if (updateData.birthdate && typeof updateData.birthdate === "string") updateData.birthdate = new Date(updateData.birthdate);
     if (updateData.dateOfFirstAppointment && typeof updateData.dateOfFirstAppointment === "string") updateData.dateOfFirstAppointment = new Date(updateData.dateOfFirstAppointment);
     if (updateData.joinDate && typeof updateData.joinDate === "string") updateData.joinDate = new Date(updateData.joinDate);
