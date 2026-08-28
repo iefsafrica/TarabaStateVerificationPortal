@@ -6,7 +6,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { Search, ArrowLeft, Loader2, CheckCircle2, Clock, XCircle, BadgeCheck, User, Briefcase, Calendar, Mail, Phone, Building, Download, ShieldCheck, Fingerprint, MapPin, School, GraduationCap, Building2, UserCircle2 } from "lucide-react";
 import { toast } from "sonner";
-
+import { useAppConfig } from "@/components/AppConfigContext";
 type Registration = {
   id?: string;
   registrationNo: string;
@@ -87,6 +87,7 @@ const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; bg: 
 };
 
 export default function TrackPage() {
+  const { appName, appLogo } = useAppConfig();
   const [activeTab, setActiveTab] = useState<"id" | "email">("id");
   const [query, setQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -248,8 +249,8 @@ export default function TrackPage() {
 
       {/* Logo */}
       <div className="flex items-center gap-3 bg-white/80 backdrop-blur px-5 py-3 rounded-full shadow-sm border border-slate-100 mb-8">
-        <Image src="/images/tsu-logo.png" alt="TSU Logo" width={28} height={28} className="rounded-full" />
-        <span className="font-bold text-slate-700 tracking-widest text-sm uppercase">TSU Staff System</span>
+        <Image src={appLogo || "/images/tsu-logo.png"} alt="System Logo" width={28} height={28} className="rounded-full" />
+        <span className="font-bold text-slate-700 tracking-widest text-sm uppercase">{appName || "TSU Staff System"}</span>
       </div>
 
       {/* Search Card */}
@@ -520,9 +521,9 @@ export default function TrackPage() {
         <div id="print-status-report" className="print-only-container p-8 font-sans max-w-4xl mx-auto">
           <div className="flex items-center gap-4 border-b-2 border-green-700 pb-4 mb-6 text-left">
             {/* eslint-disable-next-html-element-warnings, @next/next/no-img-element */}
-            <img src="/images/tsu-logo.png" alt="Taraba State Logo" className="h-14 w-14 object-contain shrink-0" />
+            <img src={appLogo || "/images/tsu-logo.png"} alt="System Logo" className="h-14 w-14 object-contain shrink-0" />
             <div>
-              <h1 className="text-xl font-bold text-green-800">TARABA STATE GOVERNMENT</h1>
+              <h1 className="text-xl font-bold text-green-800">{appName || "TARABA STATE GOVERNMENT"}</h1>
               <p className="text-sm text-slate-600">Staff Onboarding & Verification Portal — Verification Status Receipt</p>
             </div>
           </div>
