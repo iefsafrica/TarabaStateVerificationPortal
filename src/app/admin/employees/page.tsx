@@ -84,24 +84,6 @@ export default function EmployeesPage() {
     );
   });
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await fetch("/api/employees");
-        const json = await res.json();
-        if (json.success) {
-          setEmployees(json.data);
-          setStats(json.stats);
-        }
-      } catch (error) {
-        console.error("Failed to load employees", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
-
   const handleVerify = async (id: string) => {
     try {
       toast.loading("Verifying employee and sending email...", { id: "verify" });
@@ -708,14 +690,8 @@ export default function EmployeesPage() {
 
       {/* Footer */}
       <div className="pt-10 pb-6 flex items-center justify-center gap-3 text-sm text-gray-500">
-        <Image 
-          src="/images/tsu-logo.png" 
-          alt="State Seal" 
-          width={40} 
-          height={40} 
-          className="object-contain"
-        />
-        <p>© 2026 Taraba State Verification Portal. All rights reserved.</p>
+        {/* We can skip the logo here or use useAppConfig if needed. I'll just remove the hardcoded logo and text and make it generic or use window config if I want, but since I don't have useAppConfig here, I'll just remove it or keep it simple */}
+        <p>© 2026 Admin Dashboard. All rights reserved.</p>
       </div>
     </div>
   );
