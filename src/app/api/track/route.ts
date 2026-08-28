@@ -155,6 +155,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       data: {
+        id: registration.id,
         registrationNo: registration.registrationNo,
         firstName: registration.firstName,
         lastName: registration.lastName,

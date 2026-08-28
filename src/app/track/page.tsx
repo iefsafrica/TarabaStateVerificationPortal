@@ -316,7 +316,15 @@ export default function TrackPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start pt-10 px-4 pb-16" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #eff6ff 60%, #fdf4ff 100%)" }}>
-      <Script src="https://kyc-verify-v2.netapps.ng/embed.js" strategy="lazyOnload" />
+      <Script 
+        src="https://kyc-verify-v2.netapps.ng/embed.js" 
+        strategy="lazyOnload" 
+        data-public-key={process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e"}
+        data-user-ref="track-init"
+        data-slug="ippis_nin_verification"
+        data-name="Taraba Staff Track"
+        data-level-slug="tier_1"
+      />
 
       {/* Logo */}
       <div className="flex items-center gap-3 bg-white/80 backdrop-blur px-5 py-3 rounded-full shadow-sm border border-slate-100 mb-8">
