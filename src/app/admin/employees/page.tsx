@@ -325,6 +325,40 @@ export default function EmployeesPage() {
                       let headerRowIndex = -1;
                       let rows: any[] = [];
                       let debugInfo = "";
+
+                      // Broad vocabulary of keywords that indicate a header row.
+                      // A row is treated as headers if it matches at least 2 of these.
+                      const HEADER_KEYWORDS = [
+                        // Name variants
+                        "name", "firstname", "lastname", "surname", "fullname", "othername", "middlename", "maiden",
+                        // Contact
+                        "email", "phone", "telephone", "mobile", "contact",
+                        // Identity
+                        "nin", "bvn", "id", "staffid", "serviceno", "fileno", "registrationno", "regno",
+                        // Date fields
+                        "dob", "dateofbirth", "birthdate", "dateofappointment", "dateoffirstappointment",
+                        "dateofgraduation", "dateofconfirmation", "dateofpromotion", "dateoflastpromotion",
+                        // Employment
+                        "department", "position", "designation", "rank", "cadre", "grade", "gradelevel", "step",
+                        "ministry", "organization", "employmenttype", "workstation", "currentstation",
+                        "currentstationnameofschool", "posting", "presentposting",
+                        // Personal
+                        "gender", "sex", "dob", "marital", "nationality", "stateoforigin", "lga", "lgaoforigin",
+                        "address", "state", "country", "ward",
+                        // Education
+                        "qualification", "certificate", "institution", "course", "subject",
+                        // Finance
+                        "bank", "account", "nuban", "pfa", "rsa", "salary", "gradelevel",
+                        // Health professional
+                        "mdcn", "practitioner", "facility", "specialization",
+                        // Misc
+                        "status", "notes", "validation", "uuid", "submissionid",
+                      ];
+
+                      const countHeaderMatches = (cells: string[]) =>
+                        cells.filter(cell =>
+                          cell.length > 1 && HEADER_KEYWORDS.some(kw => cell.includes(kw))
+                        ).length;
                       
                       for (const sheetName of workbook.SheetNames) {
                         const ws = workbook.Sheets[sheetName];
@@ -333,13 +367,8 @@ export default function EmployeesPage() {
                         for (let r = 0; r < Math.min(20, sheetRows.length); r++) {
                           const rowCells = (sheetRows[r] || []).map((c: any) => String(c).toLowerCase().replace(/[^a-z0-9]/g, ''));
                           
-                          // Look for exact cell matches of our known headers
-                          if (
-                            rowCells.includes("fullname") || 
-                            rowCells.includes("currentstationnameofschool") ||
-                            rowCells.includes("dateofbirth") ||
-                            rowCells.includes("phonenumber")
-                          ) {
+                          // Accept the row as a header if it has at least 2 recognizable column keywords
+                          if (countHeaderMatches(rowCells) >= 2) {
                             headerRowIndex = r;
                             rows = sheetRows;
                             break;
