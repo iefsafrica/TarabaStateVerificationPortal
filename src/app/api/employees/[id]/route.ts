@@ -100,10 +100,10 @@ export async function PATCH(
     }
 
     return NextResponse.json({ success: true, data: employee });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating employee:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to update employee" },
+      { success: false, error: error.message || "Failed to update employee" },
       { status: 500 }
     );
   }
