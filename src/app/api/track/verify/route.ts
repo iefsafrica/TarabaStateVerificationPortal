@@ -19,6 +19,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Employee not found." }, { status: 404 });
     }
 
+    const dateFields = ["birthdate", "dateOfFirstAppointment", "dateOfConfirmation", "dateOfPresentAppointment"];
+    for (const df of dateFields) {
+      if (updatedData[df] && typeof updatedData[df] === "string") {
+        const parsed = new Date(updatedData[df]);
+        updatedData[df] = isNaN(parsed.getTime()) ? null : parsed;
+      }
+    }
+
     const updatedEmployee = await prisma.employee.update({
       where: { id: employeeId },
       data: {

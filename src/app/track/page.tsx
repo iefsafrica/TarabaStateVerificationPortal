@@ -7,6 +7,32 @@ import Script from "next/script";
 import { Search, ArrowLeft, Loader2, CheckCircle2, Clock, XCircle, BadgeCheck, User, Briefcase, Calendar, Mail, Phone, Building, Download, ShieldCheck, Fingerprint, MapPin, School, GraduationCap, Building2, UserCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAppConfig } from "@/components/AppConfigContext";
+
+// Helper to format dates coming from external APIs into YYYY-MM-DD format for HTML date inputs
+const formatDateForInput = (dateStr: string | null | undefined): string => {
+  if (!dateStr) return "";
+  
+  // If it's already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+
+  // Try parsing DD-MM-YYYY or DD/MM/YYYY
+  const parts = dateStr.split(/[-/]/);
+  if (parts.length === 3) {
+    if (parts[0].length === 2 && parts[2].length === 4) {
+      // It's DD-MM-YYYY
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+  }
+
+  // Fallback to JS Date parsing
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) {
+    return d.toISOString().split('T')[0];
+  }
+
+  return "";
+};
+
 type Registration = {
   id?: string;
   registrationNo: string;
@@ -202,7 +228,7 @@ export default function TrackPage() {
             lastName: data.lastName || data.surname || result?.lastName || "",
             middleName: data.middleName || result?.middleName || "",
             gender: data.gender || result?.gender || "",
-            birthdate: data.birthdate || data.dob || (result?.birthdate ? new Date(result.birthdate).toISOString().split('T')[0] : ""),
+            birthdate: formatDateForInput(data.birthdate || data.dob) || (result?.birthdate ? new Date(result.birthdate).toISOString().split('T')[0] : ""),
           }));
           setShowNinModal(true);
           setIsVerifyingNin(false);
@@ -238,7 +264,7 @@ export default function TrackPage() {
                 lastName: data.lastName || data.surname || result?.lastName || "",
                 middleName: data.middleName || result?.middleName || "",
                 gender: data.gender || result?.gender || "",
-                birthdate: data.birthdate || data.dob || (result?.birthdate ? new Date(result.birthdate).toISOString().split('T')[0] : ""),
+                birthdate: formatDateForInput(data.birthdate || data.dob) || (result?.birthdate ? new Date(result.birthdate).toISOString().split('T')[0] : ""),
               }));
               
               setShowNinModal(true);
