@@ -129,6 +129,19 @@ export default function TrackPage() {
     department: "",
     designation: "",
     grade: "",
+    stateOfOrigin: "",
+    lga: "",
+    nationality: "",
+    fileNo: "",
+    employmentId: "",
+    serviceNo: "",
+    dateOfFirstAppointment: "",
+    rank: "",
+    cadre: "",
+    highestQualification: "",
+    bankName: "",
+    accountNumber: "",
+    bvn: "",
   });
 
   const handleSearch = async () => {
@@ -305,6 +318,19 @@ export default function TrackPage() {
       department: result?.department || "",
       designation: result?.designation || "",
       grade: result?.grade || "",
+      stateOfOrigin: (result as any)?.stateOfOrigin || "",
+      lga: (result as any)?.lga || "",
+      nationality: (result as any)?.nationality || "",
+      fileNo: (result as any)?.fileNo || (result as any)?.registrationNo || "",
+      employmentId: (result as any)?.employmentId || "",
+      serviceNo: (result as any)?.serviceNo || "",
+      dateOfFirstAppointment: (result as any)?.dateOfFirstAppointment ? new Date((result as any).dateOfFirstAppointment).toISOString().split('T')[0] : "",
+      rank: (result as any)?.rank || "",
+      cadre: (result as any)?.cadre || "",
+      highestQualification: (result as any)?.highestQualification || "",
+      bankName: (result as any)?.bankName || "",
+      accountNumber: (result as any)?.accountNumber || "",
+      bvn: (result as any)?.bvn || "",
     });
     setIsEditingProfile(true);
   };
@@ -332,6 +358,19 @@ export default function TrackPage() {
           department: formData.department,
           designation: formData.designation,
           grade: formData.grade,
+          stateOfOrigin: formData.stateOfOrigin,
+          lga: formData.lga,
+          nationality: formData.nationality,
+          fileNo: formData.fileNo,
+          employmentId: formData.employmentId,
+          serviceNo: formData.serviceNo,
+          dateOfFirstAppointment: formData.dateOfFirstAppointment,
+          rank: formData.rank,
+          cadre: formData.cadre,
+          highestQualification: formData.highestQualification,
+          bankName: formData.bankName,
+          accountNumber: formData.accountNumber,
+          bvn: formData.bvn,
         }),
       });
 
@@ -725,6 +764,123 @@ export default function TrackPage() {
                   <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{result.designation}</div>
                 ) : (
                   <input type="text" value={formData.designation} onChange={(e) => setFormData({...formData, designation: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
+              </div>
+
+              {/* State of Origin */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  State of Origin {(result as any)?.stateOfOrigin ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {(result as any)?.stateOfOrigin ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{(result as any)?.stateOfOrigin}</div>
+                ) : (
+                  <input type="text" value={formData.stateOfOrigin} onChange={(e) => setFormData({...formData, stateOfOrigin: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
+              </div>
+
+              {/* LGA */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  LGA {(result as any)?.lga ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {(result as any)?.lga ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{(result as any)?.lga}</div>
+                ) : (
+                  <input type="text" value={formData.lga} onChange={(e) => setFormData({...formData, lga: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
+              </div>
+
+              {/* Nationality */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Nationality {(result as any)?.nationality ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {(result as any)?.nationality ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{(result as any)?.nationality}</div>
+                ) : (
+                  <input type="text" value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
+              </div>
+
+              {/* File No */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  File Number {(result as any)?.fileNo ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {(result as any)?.fileNo ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{(result as any)?.fileNo}</div>
+                ) : (
+                  <input type="text" value={formData.fileNo} onChange={(e) => setFormData({...formData, fileNo: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
+              </div>
+
+              {/* Rank */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Rank {(result as any)?.rank ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {(result as any)?.rank ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{(result as any)?.rank}</div>
+                ) : (
+                  <input type="text" value={formData.rank} onChange={(e) => setFormData({...formData, rank: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
+              </div>
+
+              {/* Cadre */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Cadre {(result as any)?.cadre ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {(result as any)?.cadre ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{(result as any)?.cadre}</div>
+                ) : (
+                  <input type="text" value={formData.cadre} onChange={(e) => setFormData({...formData, cadre: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
+              </div>
+
+              {/* Bank Name */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Bank Name {(result as any)?.bankName ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {(result as any)?.bankName ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{(result as any)?.bankName}</div>
+                ) : (
+                  <input type="text" value={formData.bankName} onChange={(e) => setFormData({...formData, bankName: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
+              </div>
+
+              {/* Account Number */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Account Number {(result as any)?.accountNumber ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {(result as any)?.accountNumber ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{(result as any)?.accountNumber}</div>
+                ) : (
+                  <input type="text" value={formData.accountNumber} onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
+              </div>
+
+              {/* BVN */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  BVN {(result as any)?.bvn ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {(result as any)?.bvn ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{(result as any)?.bvn}</div>
+                ) : (
+                  <input type="text" value={formData.bvn} onChange={(e) => setFormData({...formData, bvn: e.target.value})}
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
                 )}
               </div>
