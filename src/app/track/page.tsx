@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -715,7 +715,6 @@ export default function TrackPage() {
             </div>
           </div>
         </div>
-      )}
       )}
 
       {/* NIN Verification Overlay / Form Review */}
