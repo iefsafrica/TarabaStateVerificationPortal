@@ -175,7 +175,15 @@ export default function AddEmployeePage() {
 
   return (
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in-up">
-      <Script src="https://kyc-verify-v2.netapps.ng/embed.js" strategy="lazyOnload" />
+      <Script 
+        src="https://kyc-verify-v2.netapps.ng/embed.js" 
+        strategy="lazyOnload" 
+        data-public-key={process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e"}
+        data-user-ref="placeholder-ref"
+        data-slug="ippis_nin_verification"
+        data-name="Taraba Staff"
+        data-level-slug="tier_1"
+      />
 
       <div className="flex items-center justify-between mb-8">
         <div>

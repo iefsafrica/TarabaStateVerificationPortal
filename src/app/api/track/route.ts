@@ -151,7 +151,7 @@ export async function GET(request: Request) {
       );
     }
 
-    // Return safe fields only (no BVN/NIN full numbers)
+    // Return all relevant fields including imported data
     return NextResponse.json({
       success: true,
       data: {
@@ -169,6 +169,24 @@ export async function GET(request: Request) {
         ninVerified: registration.ninVerified,
         createdAt: registration.createdAt,
         updatedAt: registration.updatedAt,
+        // Extra imported details
+        currentStation: registration.currentStation,
+        lga: registration.lga,
+        gender: registration.gender,
+        cadre: registration.cadre,
+        birthdate: registration.birthdate,
+        dateOfFirstAppointment: registration.dateOfFirstAppointment,
+        dateOfLastPromotion: registration.dateOfLastPromotion,
+        lgaOfOrigin: registration.lgaOfOrigin,
+        nationality: registration.nationality,
+        rank: registration.rank,
+        highestQualification: registration.highestQualification,
+        stateOfOrigin: registration.stateOfOrigin,
+        subjectTaught: registration.subjectTaught,
+        bankName: registration.bankName,
+        accountNumber: registration.accountNumber,
+        bvn: registration.bvn,
+        nin: registration.nin,
       }
     });
   } catch (error) {
