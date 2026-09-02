@@ -73,6 +73,32 @@ export async function PATCH(
     delete updateData.createdAt;
     delete updateData.updatedAt;
 
+    // Fetch existing employee to protect non-null fields from being overwritten
+    const existing = await prisma.employee.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Employee not found" }, { status: 404 });
+    }
+
+    // These are the fields employees can submit from the self-service update form.
+    // Only allow a field to be updated if it is currently null/empty in the DB.
+    const selfServiceFields = [
+      "firstName", "lastName", "middleName", "gender", "birthdate",
+      "telephone", "email", "department", "position", "gradeLevel", "photo",
+    ];
+
+    for (const field of selfServiceFields) {
+      const existingVal = (existing as any)[field];
+      // If the DB already has a value, drop the incoming value so it cannot be changed
+      if (existingVal !== null && existingVal !== undefined && existingVal !== "") {
+        delete updateData[field];
+      }
+    }
+
+    // photo is always allowed to be set/changed (not a data-integrity field)
+    if ("photo" in data) {
+      updateData.photo = data.photo;
+    }
+
     const employee = await prisma.employee.update({
       where: { id },
       data: updateData,

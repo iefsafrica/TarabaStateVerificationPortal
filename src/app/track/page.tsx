@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -525,15 +525,26 @@ export default function TrackPage() {
           <div className="px-8 py-6 border-b border-slate-100 bg-[#00894F] text-white flex justify-between items-center">
             <div>
               <h2 className="font-bold text-lg">Update Profile</h2>
-              <p className="text-green-100 text-sm opacity-90 mt-1">Keep your information up to date</p>
+              <p className="text-green-100 text-sm opacity-90 mt-1">You can only fill in information that is missing from your record</p>
             </div>
             <UserCircle2 className="h-8 w-8 text-green-200 opacity-50" />
           </div>
 
           <div className="p-8">
+            {/* Info banner */}
+            <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6">
+              <ShieldCheck className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800">
+                <strong>Locked fields</strong> contain verified data from official records and cannot be changed. Only fields marked <strong className="text-green-700">editable</strong> can be updated.
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Photo â€” always editable */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Passport Photograph</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Passport Photograph <span className="text-xs font-normal text-green-600 ml-1">(editable)</span>
+                </label>
                 <div className="flex items-center gap-4">
                   {formData.photo && (
                     <img src={formData.photo} alt="Profile" className="w-20 h-20 rounded-full object-cover border border-slate-200 shadow-sm" />
@@ -542,18 +553,14 @@ export default function TrackPage() {
                     <span className="text-sm font-medium text-green-600">
                       {formData.photo ? "Change Photo" : "Upload Photo"}
                     </span>
-                    <input 
-                      type="file" 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      className="hidden"
                       accept=".jpg,.jpeg,.png"
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        if (file.size > 5 * 1024 * 1024) {
-                          toast.error("File is too large. Max 5MB.");
-                          return;
-                        }
-                        
+                        if (file.size > 5 * 1024 * 1024) { toast.error("File is too large. Max 5MB."); return; }
                         const uploadPromise = fetch("/api/upload", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
@@ -562,113 +569,131 @@ export default function TrackPage() {
                         .then(res => res.json())
                         .then(async data => {
                           if (data.url) {
-                            await fetch(data.url, {
-                              method: "PUT",
-                              body: file,
-                              headers: { "Content-Type": file.type }
-                            });
+                            await fetch(data.url, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
                             return data.publicUrl;
                           } else if (data.success && data.fileUrl) {
-                            // Local fallback handler might return fileUrl directly (base64 or local path)
                             return data.fileUrl;
                           } else {
-                            // Fallback base64 for local dev if upload API is not fully set up
-                            return new Promise((resolve) => {
-                              const reader = new FileReader();
-                              reader.onload = (e) => resolve(e.target?.result);
-                              reader.readAsDataURL(file);
-                            });
+                            return new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target?.result); reader.readAsDataURL(file); });
                           }
                         });
-
                         toast.promise(uploadPromise, {
                           loading: "Uploading photo...",
-                          success: (url) => {
-                            setFormData({ ...formData, photo: url as string });
-                            return "Photo uploaded successfully!";
-                          },
+                          success: (url) => { setFormData({ ...formData, photo: url as string }); return "Photo uploaded successfully!"; },
                           error: "Failed to upload photo"
                         });
-                      }} 
+                      }}
                     />
                   </label>
                 </div>
               </div>
 
+              {/* First Name */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">First Name</label>
-                <input
-                  type="text"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                />
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  First Name {result.firstName ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {result.firstName ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{result.firstName}</div>
+                ) : (
+                  <input type="text" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
               </div>
+
+              {/* Last Name */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Last Name</label>
-                <input
-                  type="text"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                />
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Last Name {result.lastName ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {result.lastName ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{result.lastName}</div>
+                ) : (
+                  <input type="text" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
               </div>
+
+              {/* Middle Name */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Middle Name</label>
-                <input
-                  type="text"
-                  value={formData.middleName}
-                  onChange={(e) => setFormData({...formData, middleName: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                />
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Middle Name {result.middleName ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {result.middleName ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{result.middleName}</div>
+                ) : (
+                  <input type="text" value={formData.middleName} onChange={(e) => setFormData({...formData, middleName: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
               </div>
+
+              {/* Gender */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Gender</label>
-                <select
-                  value={formData.gender}
-                  onChange={(e) => setFormData({...formData, gender: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none bg-white"
-                >
-                  <option value="">Select...</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Gender {result.gender ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {result.gender ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{result.gender}</div>
+                ) : (
+                  <select value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none bg-white">
+                    <option value="">Select...</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                )}
               </div>
+
+              {/* Email */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Email Address</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                />
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Email Address {result.email ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {result.email ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{result.email}</div>
+                ) : (
+                  <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
               </div>
+
+              {/* Phone */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Phone Number</label>
-                <input
-                  type="text"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                />
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Phone Number {result.phone ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {result.phone ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{result.phone}</div>
+                ) : (
+                  <input type="text" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
               </div>
+
+              {/* Department */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Department</label>
-                <input
-                  type="text"
-                  value={formData.department}
-                  onChange={(e) => setFormData({...formData, department: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                />
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Department / MDA {result.department ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {result.department ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{result.department}</div>
+                ) : (
+                  <input type="text" value={formData.department} onChange={(e) => setFormData({...formData, department: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
               </div>
+
+              {/* Designation */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Designation</label>
-                <input
-                  type="text"
-                  value={formData.designation}
-                  onChange={(e) => setFormData({...formData, designation: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                />
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Designation {result.designation ? <span className="text-amber-600 ml-1">&#x1F512; locked</span> : <span className="text-green-600 ml-1">(editable)</span>}
+                </label>
+                {result.designation ? (
+                  <div className="w-full border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-600">{result.designation}</div>
+                ) : (
+                  <input type="text" value={formData.designation} onChange={(e) => setFormData({...formData, designation: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" />
+                )}
               </div>
             </div>
 
@@ -690,6 +715,7 @@ export default function TrackPage() {
             </div>
           </div>
         </div>
+      )}
       )}
 
       {/* NIN Verification Overlay / Form Review */}
