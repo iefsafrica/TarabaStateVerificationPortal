@@ -451,8 +451,13 @@ export default function EmployeesPage() {
                           else if (key === "duplicateflag") empData.duplicateFlag = val;
                           else if (key === "sharedidentifierflag" || key === "sharedidentifierflags") empData.sharedIdentifierFlag = val;
                           else if (key.startsWith("recordswhereabvnnin") || key.startsWith("recordswhereabvn")) empData.sharedIdentifierFlag = val;
-                          else if (key === "firstname" || key === "first name") empData.firstName = val;
-                          else if (key === "lastname" || key === "surname" || key === "last name") empData.lastName = val;
+                          else if (key === "firstname" || key === "firstname") empData.firstName = val;
+                          else if (key === "lastname" || key === "surname" || key === "othersurname") empData.lastName = val;
+                          else if (key === "middlename" || key === "othername" || key === "middlenames") empData.middleName = val;
+                          else if (key === "designation" || key === "position" || key === "jobdesignation" || key === "jobtitle") empData.position = val;
+                          else if (key === "employmentid" || key === "staffid" || key === "staffno" || key === "employeeid") empData.employmentId = val;
+                          else if (key === "serviceno" || key === "servicenum" || key === "servicenumber") empData.serviceNo = val;
+                          else if (key === "fileno" || key === "filenumber" || key === "fileempno" || key === "empno") empData.fileNo = val;
 
                           // ── Health Facilities columns ──────────────────────────────
                           else if (key === "othername" || key === "other name") empData.middleName = val;
@@ -493,7 +498,7 @@ export default function EmployeesPage() {
                           else if (key === "presentposting" || key.includes("present f") || key === "present posting") empData.presentPosting = val;
                           else if (key === "currentgradelevel" || key === "current grade") empData.gradeLevel = empData.gradeLevel || val;
                           else if (key === "currentstep" || key === "current step") empData.step = val;
-                          else if (key === "dateoffirstappointment" || key === "date of first appointment") {
+                          else if (key === "dateoffirstappointment" || key === "dateofappointment" || key === "firstappointment" || key === "appointmentdate") {
                             empData._rawDateFirstAppt = rawVal;
                           }
                           else if (key === "dateofconfirmation" || key === "date of confirmation") {
