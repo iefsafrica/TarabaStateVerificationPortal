@@ -160,13 +160,41 @@ export default function TrackPage() {
     if (e.key === "Enter") handleSearch();
   };
 
-  const handleVerifyNin = () => {
+  const handleVerifyNin = async () => {
     if (!(window as any).KycWidget) {
       toast.error("NIN verification SDK is still loading. Please try again in a few seconds.");
       return;
     }
 
     setIsVerifyingNin(true);
+
+    // Proactively check if the user already verified their NIN in a previous session
+    // to prevent the widget from throwing a "Verification failed" or duplicate error.
+    try {
+      const checkRes = await fetch(`/api/kyc-status?userRef=${userRef}&slug=ippis_nin_verification`);
+      if (checkRes.ok) {
+        const data = await checkRes.json();
+        // If we get valid data back, they are already verified!
+        if (data && !data.error && data.nin) {
+          toast.success("NIN already verified! Fetching your auto-fill data...");
+          setNinData(data);
+          setFormData(prev => ({
+            ...prev,
+            firstName: data.firstName || data.firstname || result?.firstName || "",
+            lastName: data.lastName || data.surname || result?.lastName || "",
+            middleName: data.middleName || result?.middleName || "",
+            gender: data.gender || result?.gender || "",
+            birthdate: data.birthdate || data.dob || (result?.birthdate ? new Date(result.birthdate).toISOString().split('T')[0] : ""),
+          }));
+          setShowNinModal(true);
+          setIsVerifyingNin(false);
+          return; // Skip launching the widget
+        }
+      }
+    } catch (e) {
+      // Ignore error and fall through to opening the widget
+      console.error("Pre-check failed", e);
+    }
 
     (window as any).KycWidget.init({
       publicKey: process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e",
