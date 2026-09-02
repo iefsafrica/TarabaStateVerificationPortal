@@ -12,7 +12,7 @@ import { useAppConfig } from "@/components/AppConfigContext";
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
-  const { appName, appLogo } = useAppConfig();
+  const { appName, appLogo, enableLogin } = useAppConfig();
 
   useEffect(() => {
     const session = localStorage.getItem("admin_session");
@@ -55,12 +55,14 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <Link
-              href="/auth/login"
-              className="text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors shadow-sm"
-            >
-              Log in
-            </Link>
+            enableLogin && (
+              <Link
+                href="/auth/login"
+                className="text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors shadow-sm"
+              >
+                Log in
+              </Link>
+            )
           )}
         </div>
       </div>

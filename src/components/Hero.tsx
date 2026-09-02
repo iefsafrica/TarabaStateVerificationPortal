@@ -6,7 +6,7 @@ import TypewriterText from './TypewriterText';
 import { useAppConfig } from './AppConfigContext';
 
 export default function Hero() {
-  const { appName, appLogo } = useAppConfig();
+  const { appName, appLogo, enableRegistration } = useAppConfig();
 
   return (
     <section className="relative w-full bg-gradient-to-b from-green-50 to-white py-24 sm:py-32 overflow-hidden">
@@ -20,11 +20,13 @@ export default function Hero() {
               A centralized platform for staff registration, identity verification, and secure staff record management.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 opacity-0 animate-fade-in-up" style={{ animationDelay: '1.7s' }}>
-              <Link href="/register" className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 text-base font-medium text-primary-foreground bg-primary rounded-md shadow hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 duration-200">
-                Register Now
-              </Link>
+              {enableRegistration && (
+                <Link href="/register" className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 text-base font-medium text-primary-foreground bg-primary rounded-md shadow hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 duration-200">
+                  Register Now
+                </Link>
+              )}
               <Link href="/track" className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 text-base font-medium text-foreground bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 transition-all hover:scale-105 active:scale-95 duration-200">
-                Track Application
+                Verify Now
               </Link>
             </div>
           </div>

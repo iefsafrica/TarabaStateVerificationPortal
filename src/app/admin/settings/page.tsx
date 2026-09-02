@@ -15,6 +15,8 @@ type SettingsState = {
   smtp_pass: string;
   smtp_from_name: string;
   smtp_from_email: string;
+  enable_registration: string;
+  enable_login: string;
 };
 
 const defaultSettings: SettingsState = {
@@ -27,6 +29,8 @@ const defaultSettings: SettingsState = {
   smtp_pass: "",
   smtp_from_name: "Taraba State Verification Portal",
   smtp_from_email: "",
+  enable_registration: "true",
+  enable_login: "true",
 };
 
 export default function SettingsPage() {
@@ -132,6 +136,8 @@ export default function SettingsPage() {
     setSettings(prev => ({ ...prev, [key]: value }));
 
   const emailEnabled = settings.email_enabled === "true";
+  const registrationEnabled = settings.enable_registration === "true";
+  const loginEnabled = settings.enable_login === "true";
 
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto space-y-6 sm:space-y-8 pb-24">
@@ -262,6 +268,60 @@ export default function SettingsPage() {
                   : <><ToggleLeft className="h-5 w-5" /> Disabled</>
                 }
               </button>
+            </div>
+          </div>
+
+          {/* Portal Access Controls */}
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-indigo-100 text-indigo-600 rounded-2xl">
+                <Globe className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Portal Access Controls</h2>
+                <p className="text-slate-500 text-sm">Enable or disable buttons on the landing page.</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                <div>
+                  <p className="font-semibold text-slate-900">Enable Registration</p>
+                  <p className="text-sm text-slate-500 mt-0.5">Show the Register button on the landing page.</p>
+                </div>
+                <button
+                  onClick={() => update("enable_registration", registrationEnabled ? "false" : "true")}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+                    registrationEnabled
+                      ? "bg-green-600 text-white hover:bg-green-700"
+                      : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                  }`}
+                >
+                  {registrationEnabled
+                    ? <><ToggleRight className="h-5 w-5" /> Enabled</>
+                    : <><ToggleLeft className="h-5 w-5" /> Disabled</>
+                  }
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                <div>
+                  <p className="font-semibold text-slate-900">Enable Login</p>
+                  <p className="text-sm text-slate-500 mt-0.5">Show the Login button in the navigation bar.</p>
+                </div>
+                <button
+                  onClick={() => update("enable_login", loginEnabled ? "false" : "true")}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+                    loginEnabled
+                      ? "bg-green-600 text-white hover:bg-green-700"
+                      : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                  }`}
+                >
+                  {loginEnabled
+                    ? <><ToggleRight className="h-5 w-5" /> Enabled</>
+                    : <><ToggleLeft className="h-5 w-5" /> Disabled</>
+                  }
+                </button>
+              </div>
             </div>
           </div>
 
