@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { 
   Database, 
   Users, 
@@ -51,6 +52,9 @@ export default function EmployeesPage() {
   const [exportStatus, setExportStatus] = useState("Active"); // Default to Active/Verified
   const [exportPeriod, setExportPeriod] = useState("All Time");
   const [isExporting, setIsExporting] = useState(false);
+
+  // Clear Pending Confirmation Modal
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // Fetch employees data
   const fetchEmployees = async () => {
@@ -126,8 +130,7 @@ export default function EmployeesPage() {
   };
 
   const handleClearPending = async () => {
-    if (!confirm("Are you sure you want to clear all pending employees? This cannot be undone.")) return;
-    
+    setShowClearConfirm(false);
     try {
       toast.loading("Clearing pending employees...", { id: "clear" });
       const res = await fetch(`/api/employees/pending`, { method: "DELETE" });
@@ -355,27 +358,41 @@ export default function EmployeesPage() {
                         "status", "notes", "validation", "uuid", "submissionid",
                       ];
 
+                      // Strategy: scan ALL sheets and ALL candidate rows, then pick the one
+                      // with the HIGHEST keyword-match score. The real employee data sheet has
+                      // 10-20 recognisable column headers; a flags/summary sheet scores far less.
+                      // Cells longer than 60 chars are descriptions, not column names — exclude them.
+                      const MAX_HEADER_CELL_LEN = 60;
+                      const MIN_HEADER_SCORE = 4; // require at least 4 recognised columns
+
                       const countHeaderMatches = (cells: string[]) =>
                         cells.filter(cell =>
-                          cell.length > 1 && HEADER_KEYWORDS.some(kw => cell.includes(kw))
+                          cell.length > 1 && cell.length <= MAX_HEADER_CELL_LEN &&
+                          HEADER_KEYWORDS.some(kw => cell.includes(kw))
                         ).length;
-                      
+
+                      let bestScore = 0;
+
                       for (const sheetName of workbook.SheetNames) {
                         const ws = workbook.Sheets[sheetName];
                         const sheetRows = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1 });
-                        
+
                         for (let r = 0; r < Math.min(20, sheetRows.length); r++) {
-                          const rowCells = (sheetRows[r] || []).map((c: any) => String(c).toLowerCase().replace(/[^a-z0-9]/g, ''));
-                          
-                          // Accept the row as a header if it has at least 2 recognizable column keywords
-                          if (countHeaderMatches(rowCells) >= 2) {
+                          const rowCells = (sheetRows[r] || []).map((c: any) =>
+                            String(c).toLowerCase().replace(/[^a-z0-9]/g, '')
+                          );
+                          const score = countHeaderMatches(rowCells);
+
+                          // Only consider rows that beat both the minimum threshold and the
+                          // current best — this ensures the densest-headers sheet wins.
+                          if (score >= MIN_HEADER_SCORE && score > bestScore) {
+                            bestScore = score;
                             headerRowIndex = r;
                             rows = sheetRows;
-                            break;
+                            // Don't break — keep scanning for an even better candidate.
                           }
                         }
-                        if (headerRowIndex !== -1) break;
-                        debugInfo += `[${sheetName}: no headers found] `;
+                        if (headerRowIndex === -1) debugInfo += `[${sheetName}: score<${MIN_HEADER_SCORE}] `;
                       }
                       
                       if (headerRowIndex === -1 || !rows || rows.length < 2) {
@@ -432,7 +449,8 @@ export default function EmployeesPage() {
                           else if (key === "sexstandardized") empData.standardizedSex = val;
                           else if (key === "cadrestandardized") empData.standardizedCadre = val;
                           else if (key === "duplicateflag") empData.duplicateFlag = val;
-                          else if (key === "sharedidentifierflag") empData.sharedIdentifierFlag = val;
+                          else if (key === "sharedidentifierflag" || key === "sharedidentifierflags") empData.sharedIdentifierFlag = val;
+                          else if (key.startsWith("recordswhereabvnnin") || key.startsWith("recordswhereabvn")) empData.sharedIdentifierFlag = val;
                           else if (key === "firstname" || key === "first name") empData.firstName = val;
                           else if (key === "lastname" || key === "surname" || key === "last name") empData.lastName = val;
 
@@ -612,11 +630,11 @@ export default function EmployeesPage() {
                 </a>
                 {stats.pending > 0 && (
                   <button 
-                    onClick={handleClearPending}
+                    onClick={() => setShowClearConfirm(true)}
                     className="flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors shadow-sm text-sm"
                   >
                     <Trash2 className="h-4 w-4" />
-                    Clear Pending
+                    Clear Pending ({stats.pending})
                   </button>
                 )}
               </>
@@ -860,6 +878,67 @@ export default function EmployeesPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Clear Pending modal rendered via portal so fixed positioning is never clipped */}
+      {showClearConfirm && typeof document !== "undefined" && createPortal(
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black/50"
+          style={{ zIndex: 9999 }}
+          onClick={() => setShowClearConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 px-6 pt-6 pb-4">
+              <div className="flex-shrink-0 w-11 h-11 rounded-full bg-red-100 flex items-center justify-center">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Clear All Pending Records?</h3>
+                <p className="text-sm text-gray-500 mt-0.5">This action cannot be undone</p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 pb-5">
+              <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-4">
+                <p className="text-sm text-red-700 font-medium">
+                  You are about to permanently delete{" "}
+                  <span className="font-bold">
+                    {stats.pending} pending employee record{stats.pending !== 1 ? "s" : ""}
+                  </span>{" "}
+                  from the database.
+                </p>
+              </div>
+              <p className="text-sm text-gray-500">
+                Only employees with{" "}
+                <span className="font-semibold text-gray-700">Pending</span> status will be
+                removed. Active, verified, and inactive employees will not be affected.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClearPending}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                Yes, Delete All
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
