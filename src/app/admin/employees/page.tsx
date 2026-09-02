@@ -580,11 +580,46 @@ export default function EmployeesPage() {
                            if (!empData.firstName) empData.firstName = "Unknown";
                            if (!empData.lastName) empData.lastName = "Unknown";
 
-                           const res = await fetch("/api/employees", {
-                             method: "POST",
-                             headers: { "Content-Type": "application/json" },
-                             body: JSON.stringify(empData)
-                           });
+                           // ── Smart Upsert: find existing employee to enrich ──────────
+                           // Try to match by NIN, BVN, fileNo, serviceNo, or email (in that priority order)
+                           let existingId: string | null = null;
+                           const lookupFields = [
+                             empData.nin && `nin=${encodeURIComponent(empData.nin)}`,
+                             empData.bvn && `bvn=${encodeURIComponent(empData.bvn)}`,
+                             empData.fileNo && `fileNo=${encodeURIComponent(empData.fileNo)}`,
+                             empData.serviceNo && `serviceNo=${encodeURIComponent(empData.serviceNo)}`,
+                             empData.email && !empData.email.startsWith("imported-") && `email=${encodeURIComponent(empData.email)}`,
+                           ].filter(Boolean);
+
+                           for (const lookup of lookupFields) {
+                             try {
+                               const lookupRes = await fetch(`/api/employees/lookup?${lookup}`);
+                               if (lookupRes.ok) {
+                                 const lookupJson = await lookupRes.json();
+                                 if (lookupJson.success && lookupJson.data?.id) {
+                                   existingId = lookupJson.data.id;
+                                   break;
+                                 }
+                               }
+                             } catch {}
+                           }
+
+                           let res: Response;
+                           if (existingId) {
+                             // PATCH existing record — only fills null/empty fields
+                             res = await fetch(`/api/employees/${existingId}/enrich`, {
+                               method: "PATCH",
+                               headers: { "Content-Type": "application/json" },
+                               body: JSON.stringify(empData)
+                             });
+                           } else {
+                             // Create new record
+                             res = await fetch("/api/employees", {
+                               method: "POST",
+                               headers: { "Content-Type": "application/json" },
+                               body: JSON.stringify(empData)
+                             });
+                           }
                            
                            if (res.ok) {
                               imported++;
