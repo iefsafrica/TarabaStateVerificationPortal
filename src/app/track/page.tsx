@@ -106,6 +106,11 @@ export default function TrackPage() {
     const script = document.createElement("script");
     script.src = "https://kyc-verify-v2.netapps.ng/embed.js";
     script.async = true;
+    script.setAttribute("data-public-key", "dummy");
+    script.setAttribute("data-user-ref", "dummy");
+    script.setAttribute("data-slug", "dummy");
+    script.setAttribute("data-name", "dummy");
+    script.setAttribute("data-level-slug", "dummy");
     document.body.appendChild(script);
   }, []);
   
