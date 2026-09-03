@@ -659,22 +659,22 @@ export default function TrackPage() {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         if (file.size > 5 * 1024 * 1024) { toast.error("File is too large. Max 5MB."); return; }
-                        const uploadPromise = fetch("/api/upload", {
+                        
+                        const uploadData = new FormData();
+                        uploadData.append("file", file);
+                        
+                        const uploadPromise = fetch("/api/settings/upload", {
                           method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ filename: file.name, contentType: file.type })
+                          body: uploadData,
                         })
                         .then(res => res.json())
-                        .then(async data => {
-                          if (data.url) {
-                            await fetch(data.url, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
-                            return data.publicUrl;
-                          } else if (data.success && data.fileUrl) {
-                            return data.fileUrl;
-                          } else {
-                            return new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target?.result); reader.readAsDataURL(file); });
+                        .then(data => {
+                          if (data.success && data.url) {
+                            return data.url;
                           }
+                          throw new Error(data.error || "Upload failed");
                         });
+
                         toast.promise(uploadPromise, {
                           loading: "Uploading photo...",
                           success: (url) => { setFormData({ ...formData, photo: url as string }); return "Photo uploaded successfully!"; },
