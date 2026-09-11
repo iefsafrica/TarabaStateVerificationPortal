@@ -97,8 +97,15 @@ export default function RegisterPage() {
       }
       const identity = result.data;
       setNinVerified(true);
+
+      const photoStr = identity.photo || result.raw?.photo || result.raw?.data?.photo;
+      const finalPhoto = photoStr 
+        ? (photoStr.startsWith("data:image") || photoStr.startsWith("http") ? photoStr : `data:image/jpeg;base64,${photoStr}`)
+        : null;
+
       setFormData(prev => ({
         ...prev,
+        photo: finalPhoto || prev.photo,
         nin: identity.nin || prev.nin,
         firstName: identity.firstName || prev.firstName,
         lastName: identity.lastName || prev.lastName,
@@ -372,35 +379,35 @@ export default function RegisterPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-slate-800 mb-2">First Name</label>
-                      <input type="text" value={formData.firstName} onChange={e => update("firstName", e.target.value)} placeholder="e.g., John" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500" />
+                      <input type="text" value={formData.firstName} onChange={e => update("firstName", e.target.value)} placeholder="e.g., John" disabled={ninVerified} className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all ${ninVerified ? "bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" : "bg-white border-slate-200 focus:ring-green-500/20 focus:border-green-500"}`} />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-slate-800 mb-2">Middle Name <span className="text-slate-400 font-normal">(Optional)</span></label>
-                      <input type="text" value={formData.middleName} onChange={e => update("middleName", e.target.value)} placeholder="e.g., David" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500" />
+                      <input type="text" value={formData.middleName} onChange={e => update("middleName", e.target.value)} placeholder="e.g., David" disabled={ninVerified} className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all ${ninVerified ? "bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" : "bg-white border-slate-200 focus:ring-green-500/20 focus:border-green-500"}`} />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-slate-800 mb-2">Last Name</label>
-                      <input type="text" value={formData.lastName} onChange={e => update("lastName", e.target.value)} placeholder="e.g., Smith" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500" />
+                      <input type="text" value={formData.lastName} onChange={e => update("lastName", e.target.value)} placeholder="e.g., Smith" disabled={ninVerified} className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all ${ninVerified ? "bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" : "bg-white border-slate-200 focus:ring-green-500/20 focus:border-green-500"}`} />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-slate-800 mb-2">Email Address</label>
-                      <input type="email" value={formData.email} onChange={e => update("email", e.target.value)} placeholder="you@example.com" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500" />
+                      <input type="email" value={formData.email} onChange={e => update("email", e.target.value)} placeholder="you@example.com" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white" />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-slate-800 mb-2">Phone Number</label>
-                      <input type="tel" value={formData.phone} onChange={e => update("phone", e.target.value)} placeholder="e.g., 08012345678" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500" />
+                      <input type="tel" value={formData.phone} onChange={e => update("phone", e.target.value)} placeholder="e.g., 08012345678" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white" />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-slate-800 mb-2">Date of Birth</label>
-                      <input type="date" value={formData.dateOfBirth} onChange={e => update("dateOfBirth", e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500" />
+                      <input type="date" value={formData.dateOfBirth} onChange={e => update("dateOfBirth", e.target.value)} disabled={ninVerified} className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all ${ninVerified ? "bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" : "bg-white border-slate-200 focus:ring-green-500/20 focus:border-green-500"}`} />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-slate-800 mb-2">Gender</label>
-                      <select value={formData.gender} onChange={e => update("gender", e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500">
+                      <select value={formData.gender} onChange={e => update("gender", e.target.value)} disabled={ninVerified} className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all ${ninVerified ? "bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" : "bg-white border-slate-200 focus:ring-green-500/20 focus:border-green-500"}`}>
                         <option value="">Select gender</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
@@ -476,16 +483,17 @@ export default function RegisterPage() {
                         <img src={formData.photo} alt="Passport Preview" className="w-24 h-24 object-cover rounded-lg border border-slate-300" />
                       </div>
                     )}
-                    <label className="flex items-center justify-center w-full bg-white border-2 border-dashed border-slate-300 rounded-xl px-4 py-6 cursor-pointer hover:border-green-400 transition-all group">
+                    <label className={`flex items-center justify-center w-full border-2 border-dashed border-slate-300 rounded-xl px-4 py-6 transition-all group ${ninVerified ? "bg-slate-50 cursor-not-allowed opacity-70" : "bg-white cursor-pointer hover:border-green-400"}`}>
                       <div className="text-center">
-                        <div className="text-sm font-medium text-green-600 group-hover:underline">
-                          {formData.photo ? "Change Photo" : "Click to Upload Photo"}
+                        <div className={`text-sm font-medium ${ninVerified ? "text-slate-500" : "text-green-600 group-hover:underline"}`}>
+                          {formData.photo ? (ninVerified ? "Photo Loaded from NIN" : "Change Photo") : "Click to Upload Photo"}
                         </div>
                       </div>
                       <input 
                         type="file" 
                         className="hidden" 
                         accept=".jpg,.jpeg,.png"
+                        disabled={ninVerified}
                         onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (!file) return;

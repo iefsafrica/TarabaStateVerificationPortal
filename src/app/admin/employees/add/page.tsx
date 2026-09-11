@@ -20,8 +20,9 @@ const InputGroup = ({ label, name, value, onChange, type = "text", placeholder, 
       required={required}
       value={value || ""}
       onChange={onChange}
+      disabled={disabled}
       placeholder={placeholder}
-      className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] focus:border-transparent transition-colors"
+      className={`w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] focus:border-transparent transition-colors ${disabled ? 'bg-gray-100 cursor-not-allowed opacity-80' : 'bg-white'}`}
     />
   </div>
 );
@@ -117,9 +118,16 @@ export default function AddEmployeePage() {
       setNinVerified(true);
       setNinData(result.raw ?? result.data);
 
+      // Process photo if present
+      const photoStr = identity.photo || result.raw?.photo || result.raw?.data?.photo;
+      const finalPhoto = photoStr 
+        ? (photoStr.startsWith("data:image") || photoStr.startsWith("http") ? photoStr : `data:image/jpeg;base64,${photoStr}`)
+        : null;
+
       // Auto-fill matching form fields from the verified identity
       setFormData(prev => ({
         ...prev,
+        photo: finalPhoto || prev.photo,
         nin: identity.nin || prev.nin,
         firstName: identity.firstName || prev.firstName,
         lastName: identity.lastName || prev.lastName,
@@ -221,7 +229,7 @@ export default function AddEmployeePage() {
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="col-span-1 md:col-span-2 lg:col-span-3 flex items-center gap-6 mb-2">
               <div className="shrink-0">
-                <label className="w-24 h-24 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden relative cursor-pointer hover:border-green-400 transition-all">
+                <label className={`w-24 h-24 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden relative transition-all ${ninVerified ? 'cursor-not-allowed opacity-80' : 'cursor-pointer hover:border-green-400'}`}>
                   {formData.photo ? (
                     <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
@@ -231,6 +239,7 @@ export default function AddEmployeePage() {
                     type="file"
                     accept=".jpg,.jpeg,.png"
                     className="hidden"
+                    disabled={ninVerified}
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
@@ -263,15 +272,17 @@ export default function AddEmployeePage() {
               <div>
                 <h3 className="text-sm font-medium text-gray-900">Employee Photo</h3>
                 <p className="text-xs text-gray-500 mt-1">Upload a passport-sized photograph. Max size 5MB (JPG/PNG).</p>
-                <div className="mt-2 text-xs font-semibold text-green-600 cursor-pointer">
-                  Click the circle to upload
-                </div>
+                {!ninVerified && (
+                  <div className="mt-2 text-xs font-semibold text-green-600 cursor-pointer">
+                    Click the circle to upload
+                  </div>
+                )}
               </div>
             </div>
 
-            <InputGroup label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Enter first name" required />
-            <InputGroup label="Surname" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Enter surname" required />
-            <InputGroup label="Middle Name" name="middleName" value={formData.middleName} onChange={handleChange} placeholder="Enter middle name" />
+            <InputGroup label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Enter first name" required disabled={ninVerified} />
+            <InputGroup label="Surname" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Enter surname" required disabled={ninVerified} />
+            <InputGroup label="Middle Name" name="middleName" value={formData.middleName} onChange={handleChange} placeholder="Enter middle name" disabled={ninVerified} />
             
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">Title <span className="text-red-500">*</span></label>
@@ -287,7 +298,7 @@ export default function AddEmployeePage() {
 
             <InputGroup label="Email Address" name="email" value={formData.email} onChange={handleChange} type="email" placeholder="Enter email" required />
             <InputGroup label="Telephone Number" name="telephone" value={formData.telephone} onChange={handleChange} placeholder="Enter phone number" required />
-            <InputGroup label="Birthdate" name="birthdate" value={formData.birthdate} onChange={handleChange} type="date" required />
+            <InputGroup label="Birthdate" name="birthdate" value={formData.birthdate} onChange={handleChange} type="date" required disabled={ninVerified} />
             
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700 flex justify-between">
@@ -303,10 +314,11 @@ export default function AddEmployeePage() {
                   type="text"
                   name="nin"
                   required
+                  disabled={ninVerified}
                   value={formData.nin}
                   onChange={handleChange}
                   placeholder="Enter NIN"
-                  className={`w-full h-10 px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] focus:border-transparent transition-colors ${ninVerified ? 'border-green-300 bg-green-50' : 'border-gray-300'}`}
+                  className={`w-full h-10 px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] focus:border-transparent transition-colors ${ninVerified ? 'border-green-300 bg-green-50 cursor-not-allowed opacity-90' : 'border-gray-300 bg-white'}`}
                 />
                 {!ninVerified && (
                   <button
@@ -330,7 +342,7 @@ export default function AddEmployeePage() {
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">Gender <span className="text-red-500">*</span></label>
-              <select name="gender" value={formData.gender} onChange={handleChange} required className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] bg-white">
+              <select name="gender" value={formData.gender} onChange={handleChange} required disabled={ninVerified} className={`w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] ${ninVerified ? 'bg-gray-100 cursor-not-allowed opacity-80' : 'bg-white'}`}>
                 <option value="">Select gender</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
