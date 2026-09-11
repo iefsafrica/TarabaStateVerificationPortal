@@ -74,6 +74,7 @@ export async function GET(request: Request) {
             accountNumber: emp.accountNumber,
             bvn: emp.bvn,
             nin: emp.nin,
+            photo: emp.photo,
           };
         }
       }
@@ -139,6 +140,7 @@ export async function GET(request: Request) {
             accountNumber: emp.accountNumber,
             bvn: emp.bvn,
             nin: emp.nin,
+            photo: emp.photo,
           };
         }
       }
@@ -187,6 +189,7 @@ export async function GET(request: Request) {
         accountNumber: registration.accountNumber,
         bvn: registration.bvn,
         nin: registration.nin,
+        photo: registration.photo,
       }
     });
   } catch (error) {
