@@ -1025,10 +1025,15 @@ export default function TrackPage() {
               <p className="text-sm text-slate-600">Staff Onboarding & Verification Portal — Verification Status Receipt</p>
             </div>
           </div>
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-center">
-            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Registration Number</p>
-            <p className="text-2xl font-bold text-green-700 tracking-widest mt-1">{result.registrationNo}</p>
-            <p className="text-xs text-slate-500 mt-1">Status: <strong>{result.status === 'Self-Verified' ? 'NIN Verified - Pending Admin Approval' : result.status}</strong></p>
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-center relative flex items-center justify-center min-h-[100px]">
+            <div className="flex-1 text-center">
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Registration Number</p>
+              <p className="text-2xl font-bold text-green-700 tracking-widest mt-1">{result.registrationNo}</p>
+              <p className="text-xs text-slate-500 mt-1">Status: <strong>{result.status === 'Self-Verified' ? 'NIN Verified - Pending Admin Approval' : result.status}</strong></p>
+            </div>
+            {(result as any)?.photo && (
+              <img src={(result as any).photo} alt="Profile Photo" className="absolute right-6 top-1/2 -translate-y-1/2 w-20 h-20 object-cover rounded-xl border border-slate-200 bg-white" />
+            )}
           </div>
           
           <div className="grid grid-cols-2 gap-8">
@@ -1039,7 +1044,7 @@ export default function TrackPage() {
                   ["Email Address", result.email],
                   ["Phone Number", result.phone || "—"],
                   ["Gender", result.gender || "—"],
-                  ["Date of Birth", result.birthdate ? new Date(result.birthdate).toLocaleDateString() : "—"],
+                  ["Date of Birth", formatDisplayDate(result.birthdate)],
                   ["State of Origin", result.stateOfOrigin || "—"],
                   ["LGA of Origin", result.lgaOfOrigin || result.lga || "—"],
                   ["Nationality", result.nationality || "—"],
@@ -1063,8 +1068,8 @@ export default function TrackPage() {
                   ["Current Station", result.currentStation || "—"],
                   ["Highest Qualification", result.highestQualification || "—"],
                   ["Subject Taught", result.subjectTaught || "—"],
-                  ["Date of 1st Appt", result.dateOfFirstAppointment ? new Date(result.dateOfFirstAppointment).toLocaleDateString() : "—"],
-                  ["Date of Last Promo", result.dateOfLastPromotion ? new Date(result.dateOfLastPromotion).toLocaleDateString() : "—"],
+                  ["Date of 1st Appt", formatDisplayDate(result.dateOfFirstAppointment)],
+                  ["Date of Last Promo", formatDisplayDate(result.dateOfLastPromotion)],
                 ].map(([lbl, val], idx) => (
                   <tr key={lbl} className={idx % 2 === 0 ? "bg-slate-50" : "bg-white"}>
                     <td className="py-2.5 px-3 font-semibold text-slate-600 border border-slate-200 w-1/2">{lbl}</td>
