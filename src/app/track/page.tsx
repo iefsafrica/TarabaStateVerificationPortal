@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import Script from "next/script";
+
 import { Search, ArrowLeft, Loader2, CheckCircle2, Clock, XCircle, BadgeCheck, User, Briefcase, Calendar, Mail, Phone, Building, Download, ShieldCheck, Fingerprint, MapPin, School, GraduationCap, Building2, UserCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAppConfig } from "@/components/AppConfigContext";
@@ -123,22 +123,7 @@ export default function TrackPage() {
   // NIN Verification Modal State
   const [showNinModal, setShowNinModal] = useState(false);
   const [isVerifyingNin, setIsVerifyingNin] = useState(false);
-  const [ninData, setNinData] = useState<any>(null); // holds mock data for the form overlay
-  const userRef = useState(`emp-${Date.now()}`)[0];
-  
-  // Load KYC Widget script dynamically
-  useEffect(() => {
-    if (document.querySelector('script[src="https://kyc-verify-v2.netapps.ng/embed.js"]')) return;
-    const script = document.createElement("script");
-    script.src = "https://kyc-verify-v2.netapps.ng/embed.js";
-    script.async = true;
-    script.setAttribute("data-public-key", "dummy");
-    script.setAttribute("data-user-ref", "dummy");
-    script.setAttribute("data-slug", "dummy");
-    script.setAttribute("data-name", "dummy");
-    script.setAttribute("data-level-slug", "dummy");
-    document.body.appendChild(script);
-  }, []);
+  const [ninData, setNinData] = useState<any>(null);
   
   // Auto-fill & Edit Profile form state
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
@@ -204,89 +189,53 @@ export default function TrackPage() {
     if (e.key === "Enter") handleSearch();
   };
 
+  /**
+   * White-Label API: direct server-to-server NIN verification.
+   * No widget or embed script required.
+   */
   const handleVerifyNin = async () => {
-    if (!(window as any).KycWidget) {
-      toast.error("NIN verification SDK is still loading. Please try again in a few seconds.");
+    if (!result?.nin && !result) {
+      toast.error("No registration found. Please search first.");
       return;
     }
-
-    setIsVerifyingNin(true);
-
-    // Proactively check if the user already verified their NIN in a previous session
-    // to prevent the widget from throwing a "Verification failed" or duplicate error.
-    try {
-      const checkRes = await fetch(`/api/kyc-status?userRef=${userRef}&slug=ippis_nin_verification`);
-      if (checkRes.ok) {
-        const data = await checkRes.json();
-        // If we get valid data back, they are already verified!
-        if (data && !data.error && data.nin) {
-          toast.success("NIN already verified! Fetching your auto-fill data...");
-          setNinData(data);
-          setFormData(prev => ({
-            ...prev,
-            firstName: data.firstName || data.firstname || result?.firstName || "",
-            lastName: data.lastName || data.surname || result?.lastName || "",
-            middleName: data.middleName || result?.middleName || "",
-            gender: data.gender || result?.gender || "",
-            birthdate: formatDateForInput(data.birthdate || data.dob) || (result?.birthdate ? new Date(result.birthdate).toISOString().split('T')[0] : ""),
-          }));
-          setShowNinModal(true);
-          setIsVerifyingNin(false);
-          return; // Skip launching the widget
-        }
-      }
-    } catch (e) {
-      // Ignore error and fall through to opening the widget
-      console.error("Pre-check failed", e);
+    const nin = result?.nin || "";
+    if (!nin || nin.length !== 11) {
+      toast.error("NIN on this record is missing or invalid. Please contact support.");
+      return;
     }
-
-    (window as any).KycWidget.init({
-      publicKey: process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e",
-      userRef,
-      slug: "ippis_nin_verification",
-      name: "Taraba Staff",
-      levelSlug: "tier_1",
-      display: "modal",
-      environment: "live",
-      callbacks: {
-        onSuccess: async () => {
-          toast.success("Verification successful! Fetching auto-fill data...");
-          try {
-            const res = await fetch(`/api/kyc-status?userRef=${userRef}&slug=ippis_nin_verification`);
-            const data = await res.json();
-            
-            if (data && !data.error) {
-              setNinData(data);
-              
-              setFormData(prev => ({
-                ...prev,
-                firstName: data.firstName || data.firstname || result?.firstName || "",
-                lastName: data.lastName || data.surname || result?.lastName || "",
-                middleName: data.middleName || result?.middleName || "",
-                gender: data.gender || result?.gender || "",
-                birthdate: formatDateForInput(data.birthdate || data.dob) || (result?.birthdate ? new Date(result.birthdate).toISOString().split('T')[0] : ""),
-              }));
-              
-              setShowNinModal(true);
-              toast.success("NIN Data securely fetched and auto-filled.");
-            } else {
-               toast.error("Could not fetch data from NetApps.");
-               setIsVerifyingNin(false);
-            }
-          } catch (e) {
-            toast.error("Error communicating with server.");
-            setIsVerifyingNin(false);
-          }
-        },
-        onError: ({ message }: any) => {
-          toast.error(`Verification error: ${message}`);
-          setIsVerifyingNin(false);
-        },
-        onClose: () => {
-           setIsVerifyingNin(false);
-        }
+    setIsVerifyingNin(true);
+    const toastId = toast.loading("Verifying NIN with NIMC…");
+    try {
+      const res = await fetch("/api/nin-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nin }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        toast.error(data.error || "NIN verification failed.", { id: toastId });
+        return;
       }
-    });
+      const identity = data.data;
+      setNinData(data.raw ?? data.data);
+      setFormData(prev => ({
+        ...prev,
+        firstName: identity.firstName || result?.firstName || "",
+        lastName: identity.lastName || result?.lastName || "",
+        middleName: identity.middleName || result?.middleName || "",
+        gender: identity.gender
+          ? identity.gender.charAt(0).toUpperCase() + identity.gender.slice(1).toLowerCase()
+          : (result?.gender || ""),
+        birthdate: formatDateForInput(identity.birthdate) || (result?.birthdate ? new Date(result.birthdate).toISOString().split('T')[0] : ""),
+      }));
+      setShowNinModal(true);
+      toast.success("NIN verified — please review and confirm your details.", { id: toastId });
+    } catch (err) {
+      console.error("[NIN Verify]", err);
+      toast.error("Network error during NIN verification.", { id: toastId });
+    } finally {
+      setIsVerifyingNin(false);
+    }
   };
 
   const handleConfirmAndSave = async () => {

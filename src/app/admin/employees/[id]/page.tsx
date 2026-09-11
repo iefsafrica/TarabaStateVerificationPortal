@@ -7,7 +7,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 // @ts-ignore
 import naija from "naija-state-local-government";
-import Script from "next/script";
+
 
 // Helper component for standard inputs moved outside to prevent re-renders causing focus loss
 const InputGroup = ({ label, name, value, onChange, type = "text", placeholder, required = false, disabled = false }: any) => (
@@ -85,47 +85,51 @@ export default function ManageEmployeePage() {
 
   const [ninVerified, setNinVerified] = useState(false);
   const [ninData, setNinData] = useState<any>(null);
-  const userRef = useState(`emp-${Date.now()}`)[0];
+  const [isVerifyingNin, setIsVerifyingNin] = useState(false);
 
-  const handleVerifyNin = () => {
-    if (!isEditing || !(window as any).KycWidget) return;
-
-    (window as any).KycWidget.init({
-      publicKey: process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e",
-      userRef,
-      slug: "ippis_nin_verification",
-      name: "Taraba Staff",
-      levelSlug: "tier_1",
-      display: "modal",
-      environment: "live",
-      callbacks: {
-        onSuccess: async () => {
-          toast.success("Verification successful! Fetching data...");
-          try {
-            const res = await fetch(`/api/kyc-status?userRef=${userRef}&slug=ippis_nin_verification`);
-            const data = await res.json();
-            
-            if (data && !data.error) {
-              setNinVerified(true);
-              setNinData(data);
-              setFormData(prev => ({
-                ...prev,
-                nin: data.nin || data.NIN || prev.nin,
-                firstName: data.firstName || data.firstname || prev.firstName,
-                lastName: data.lastName || data.surname || prev.lastName,
-                birthdate: data.birthdate || data.dob || prev.birthdate,
-              }));
-              toast.success("NIN Data securely fetched and auto-filled.");
-            }
-          } catch (e) {
-            toast.error("Error communicating with server.");
-          }
-        },
-        onError: ({ message }: any) => {
-          toast.error(`Verification error: ${message}`);
-        },
+  /**
+   * White-Label API: server-to-server NIN verification.
+   * No widget or embed script required.
+   */
+  const handleVerifyNin = async () => {
+    if (!isEditing) return;
+    const nin = formData.nin?.trim();
+    if (!nin || nin.length !== 11) {
+      toast.error("Please enter the 11-digit NIN before verifying.");
+      return;
+    }
+    setIsVerifyingNin(true);
+    const toastId = toast.loading("Verifying NIN with NIMC…");
+    try {
+      const res = await fetch("/api/nin-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nin }),
+      });
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        toast.error(result.error || "NIN verification failed.", { id: toastId });
+        return;
       }
-    });
+      const identity = result.data;
+      setNinVerified(true);
+      setNinData(result.raw ?? result.data);
+      setFormData(prev => ({
+        ...prev,
+        nin: identity.nin || prev.nin,
+        firstName: identity.firstName || prev.firstName,
+        lastName: identity.lastName || prev.lastName,
+        birthdate: identity.birthdate
+          ? new Date(identity.birthdate).toISOString().split("T")[0]
+          : prev.birthdate,
+      }));
+      toast.success("NIN verified and data auto-filled.", { id: toastId });
+    } catch (err) {
+      console.error("[NIN Verify]", err);
+      toast.error("Network error during NIN verification.", { id: toastId });
+    } finally {
+      setIsVerifyingNin(false);
+    }
   };
 
   useEffect(() => {
@@ -282,15 +286,7 @@ export default function ManageEmployeePage() {
 
   return (
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in-up">
-      <Script 
-        src="https://kyc-verify-v2.netapps.ng/embed.js" 
-        strategy="lazyOnload" 
-        data-public-key={process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e"}
-        data-user-ref="placeholder-ref"
-        data-slug="ippis_nin_verification"
-        data-name="Taraba Staff"
-        data-level-slug="tier_1"
-      />
+
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>

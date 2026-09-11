@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import Script from "next/script";
+
 import { AlertCircle, CheckCircle2, ChevronRight, Loader2, BadgeCheck, ShieldCheck, Download, Mail } from "lucide-react";
 import { toast } from "sonner";
 
@@ -69,63 +69,55 @@ export default function RegisterPage() {
   const [submitted, setSubmitted] = useState<SubmittedRegistration | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Load KYC Widget script dynamically
-  useEffect(() => {
-    if (document.querySelector('script[src="https://kyc-verify-v2.netapps.ng/embed.js"]')) return;
-    const script = document.createElement("script");
-    script.src = "https://kyc-verify-v2.netapps.ng/embed.js";
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
-
   // NIN Verification state
   const [ninVerified, setNinVerified] = useState(false);
   const [isVerifyingNin, setIsVerifyingNin] = useState(false);
-  const userRef = useState(`reg-${Date.now()}`)[0];
 
-  const handleVerifyNin = () => {
+  /**
+   * White-Label API: direct server-to-server NIN verification.
+   * No widget or embed script required.
+   */
+  const handleVerifyNin = async () => {
     if (!formData.nin || formData.nin.length !== 11) {
       toast.error("Please enter your 11-digit NIN before verifying.");
       return;
     }
     setIsVerifyingNin(true);
-    let attempts = 0;
-    const tryLaunch = () => {
-      if ((window as any).KycWidget) {
-        (window as any).KycWidget.init({
-          publicKey: process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e",
-          userRef, slug: "ippis_nin_verification",
-          name: formData.firstName ? `${formData.firstName} ${formData.lastName}`.trim() : "Applicant",
-          levelSlug: "tier_1", display: "modal", environment: "live",
-          callbacks: {
-            onSuccess: async () => {
-              toast.success("Verification successful! Fetching data...");
-              try {
-                const res = await fetch(`/api/kyc-status?userRef=${userRef}&slug=ippis_nin_verification`);
-                const data = await res.json();
-                if (data && !data.error) {
-                  setNinVerified(true);
-                  setFormData(prev => ({
-                    ...prev,
-                    nin: data.nin || data.NIN || prev.nin,
-                    firstName: data.firstName || data.firstname || prev.firstName,
-                    lastName: data.lastName || data.surname || prev.lastName,
-                    dateOfBirth: data.birthdate || data.dob || prev.dateOfBirth,
-                    ninData: data,
-                  }));
-                  toast.success("NIN verified and data auto-filled.");
-                } else toast.error("Failed to fetch verified data.");
-              } catch { toast.error("Error communicating with server."); }
-              finally { setIsVerifyingNin(false); }
-            },
-            onError: ({ message }: any) => { toast.error(`Verification failed: ${message}`); setIsVerifyingNin(false); },
-            onClose: () => setIsVerifyingNin(false),
-          }
-        });
-      } else if (attempts < 20) { attempts++; setTimeout(tryLaunch, 200); }
-      else { toast.error("KYC Widget failed to load. Please refresh the page and try again."); setIsVerifyingNin(false); }
-    };
-    tryLaunch();
+    const toastId = toast.loading("Verifying NIN with NIMC…");
+    try {
+      const res = await fetch("/api/nin-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nin: formData.nin }),
+      });
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        toast.error(result.error || "NIN verification failed. Please try again.", { id: toastId });
+        return;
+      }
+      const identity = result.data;
+      setNinVerified(true);
+      setFormData(prev => ({
+        ...prev,
+        nin: identity.nin || prev.nin,
+        firstName: identity.firstName || prev.firstName,
+        lastName: identity.lastName || prev.lastName,
+        middleName: identity.middleName || prev.middleName,
+        gender: identity.gender
+          ? identity.gender.charAt(0).toUpperCase() + identity.gender.slice(1).toLowerCase()
+          : prev.gender,
+        dateOfBirth: identity.birthdate
+          ? new Date(identity.birthdate).toISOString().split("T")[0]
+          : prev.dateOfBirth,
+        ninData: result.raw ?? result.data,
+      }));
+      toast.success("NIN verified and data auto-filled.", { id: toastId });
+    } catch (err) {
+      console.error("[NIN Verify]", err);
+      toast.error("Network error during NIN verification.", { id: toastId });
+    } finally {
+      setIsVerifyingNin(false);
+    }
   };
 
   const update = (field: keyof FormData, value: string) =>
