@@ -15,8 +15,12 @@ export async function POST(request: Request) {
       where: { id: employeeId }
     });
 
-    if (!employee) {
-      return NextResponse.json({ success: false, error: "Employee not found." }, { status: 404 });
+    const registration = !employee ? await prisma.registration.findUnique({
+      where: { id: employeeId }
+    }) : null;
+
+    if (!employee && !registration) {
+      return NextResponse.json({ success: false, error: "Record not found." }, { status: 404 });
     }
 
     const dateFields = ["birthdate", "dateOfFirstAppointment", "dateOfConfirmation", "dateOfPresentAppointment"];
@@ -27,23 +31,78 @@ export async function POST(request: Request) {
       }
     }
 
-    const updatedEmployee = await prisma.employee.update({
-      where: { id: employeeId },
-      data: {
-        ...updatedData,
+    const { phone, designation, grade, ...restData } = updatedData;
+    let updatedRecord: any = null;
+    let emailTo = "";
+    let firstNameTo = "";
+    let ninTo = "";
+
+    if (employee) {
+      // It's an Employee record
+      updatedRecord = await prisma.employee.update({
+        where: { id: employeeId },
+        data: {
+          ...restData,
+          ...(phone !== undefined && { telephone: phone }),
+          ...(designation !== undefined && { position: designation }),
+          ...(grade !== undefined && { gradeLevel: grade }),
+          ninVerified: true,
+          status: "Self-Verified"
+        }
+      });
+      emailTo = updatedRecord.email;
+      firstNameTo = updatedRecord.firstName;
+      ninTo = updatedRecord.nin;
+
+      await prisma.activity.create({
+        data: {
+          title: "Frontend NIN Verification",
+          description: `${updatedRecord.firstName} ${updatedRecord.lastName} verified their NIN and updated profile from frontend.`,
+          type: "System",
+          status: "Completed",
+        },
+      });
+    } else if (registration) {
+      // It's a Registration record
+      // Registration model doesn't have all the new imported fields natively (like bankName, lga, etc)
+      // but we update what we can.
+      const validRegData = {
+        firstName: updatedData.firstName,
+        lastName: updatedData.lastName,
+        middleName: updatedData.middleName,
+        email: updatedData.email,
+        phone: updatedData.phone || phone,
+        gender: updatedData.gender,
+        department: updatedData.department,
+        designation: updatedData.designation || designation,
+        grade: updatedData.grade || grade,
+        bvn: updatedData.bvn,
+        nin: updatedData.nin,
+        photo: updatedData.photo,
         ninVerified: true,
         status: "Self-Verified"
-      }
-    });
+      };
 
-    await prisma.activity.create({
-      data: {
-        title: "Frontend NIN Verification",
-        description: `${updatedEmployee.firstName} ${updatedEmployee.lastName} verified their NIN and updated profile from frontend.`,
-        type: "System",
-        status: "Completed",
-      },
-    });
+      // Only include defined keys
+      const cleanRegData = Object.fromEntries(Object.entries(validRegData).filter(([_, v]) => v !== undefined));
+
+      updatedRecord = await prisma.registration.update({
+        where: { id: employeeId },
+        data: cleanRegData
+      });
+      emailTo = updatedRecord.email;
+      firstNameTo = updatedRecord.firstName;
+      ninTo = updatedRecord.nin;
+
+      await prisma.activity.create({
+        data: {
+          title: "Frontend NIN Verification",
+          description: `${updatedRecord.firstName} ${updatedRecord.lastName} verified their NIN on Registration record.`,
+          type: "System",
+          status: "Completed",
+        },
+      });
+    }
 
     try {
       const transporter = nodemailer.createTransport({
@@ -62,12 +121,12 @@ export async function POST(request: Request) {
             <h1 style="margin: 0; font-size: 24px;">Verification Receipt</h1>
           </div>
           <div style="padding: 30px; background-color: #f8fafc;">
-            <p>Dear ${updatedEmployee.firstName},</p>
+            <p>Dear ${updatedRecord.firstName},</p>
             <p>Your NIN verification has been completed successfully via the Taraba State Self-Service Portal.</p>
             <div style="background-color: white; border-radius: 6px; padding: 15px; margin: 20px 0; border: 1px solid #e2e8f0;">
-              <p><strong>NIN:</strong> ${updatedEmployee.nin}</p>
-              <p><strong>Name:</strong> ${updatedEmployee.firstName} ${updatedEmployee.lastName}</p>
-              <p><strong>Email:</strong> ${updatedEmployee.email}</p>
+              <p><strong>NIN:</strong> ${updatedRecord.nin}</p>
+              <p><strong>Name:</strong> ${updatedRecord.firstName} ${updatedRecord.lastName}</p>
+              <p><strong>Email:</strong> ${updatedRecord.email}</p>
               <p><strong>Status:</strong> Pending Final Approval</p>
             </div>
             <p>Your profile details have been sent to the admin team for final review and approval.</p>
@@ -80,7 +139,7 @@ export async function POST(request: Request) {
 
       await transporter.sendMail({
         from: `"Taraba State Verification Portal" <${process.env.SMTP_USER || "noreply@tarabastate.gov.ng"}>`,
-        to: updatedEmployee.email,
+        to: updatedRecord.email,
         subject: "Verification Successful - Receipt",
         html: receiptHTML,
       });
@@ -88,7 +147,7 @@ export async function POST(request: Request) {
       console.error("Email notification failed (Track Verify):", emailError);
     }
 
-    return NextResponse.json({ success: true, data: updatedEmployee }, { status: 200 });
+    return NextResponse.json({ success: true, data: updatedRecord }, { status: 200 });
 
   } catch (error) {
     console.error("Error verifying NIN from track:", error);
