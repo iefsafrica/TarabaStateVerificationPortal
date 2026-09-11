@@ -522,24 +522,33 @@ export default function TrackPage() {
             </div>
           )}
 
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-              <h2 className="font-bold text-slate-900">Registration Details</h2>
-              {result.ninVerified && (
-                 <span className="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded-md">
-                   <CheckCircle2 className="h-3 w-3" /> NIN Verified
-                 </span>
-              )}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden mb-6">
+            <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                {(result as any)?.photo && (
+                  <img src={(result as any).photo} alt="Profile Photo" className="w-16 h-16 object-cover rounded-full border-2 border-slate-100 shadow-sm" />
+                )}
+                <h2 className="font-bold text-slate-900 text-lg">Registration Details</h2>
+              </div>
+              <div className="flex items-center gap-3">
+                {result.ninVerified && (
+                   <span className="inline-flex items-center gap-1.5 text-sm font-bold text-green-700 bg-green-50 px-3 py-1 rounded-full">
+                     <CheckCircle2 className="h-4 w-4" /> NIN Verified
+                   </span>
+                )}
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm font-semibold"
+                >
+                  <Download className="h-4 w-4" />
+                  Print
+                </button>
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-0 gap-x-0 divide-y md:divide-y-0 md:divide-x border-b border-slate-100">
                <div className="p-5 flex flex-col gap-4">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1"><UserCircle2 className="w-3 h-3"/> Personal</h3>
-                  {(result as any)?.photo && (
-                    <div className="mb-2 flex justify-center">
-                      <img src={(result as any).photo} alt="Profile Photo" className="w-24 h-24 object-cover rounded-full border-4 border-white shadow-sm" />
-                    </div>
-                  )}
                   <DetailItem icon={<User className="h-4 w-4" />} label="Full Name" value={`${result.firstName} ${result.middleName || ""} ${result.lastName}`.trim()} />
                   <DetailItem icon={<Fingerprint className="h-4 w-4" />} label="Gender" value={result.gender || "—"} />
                   <DetailItem icon={<Calendar className="h-4 w-4" />} label="Date of Birth" value={formatDisplayDate(result.birthdate)} />
