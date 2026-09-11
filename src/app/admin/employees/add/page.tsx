@@ -7,7 +7,6 @@ import Link from "next/link";
 import { toast } from "sonner";
 // @ts-ignore
 import naija from "naija-state-local-government";
-import Script from "next/script";
 
 // Helper component for standard inputs moved outside to prevent re-renders causing focus loss
 const InputGroup = ({ label, name, value, onChange, type = "text", placeholder, required = false }: any) => (
@@ -79,55 +78,67 @@ export default function AddEmployeePage() {
 
   const [ninVerified, setNinVerified] = useState(false);
   const [ninData, setNinData] = useState<any>(null);
-  // Ensure stable userRef per component lifecycle
-  const userRef = useState(`emp-${Date.now()}`)[0];
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleVerifyNin = () => {
-    if (!(window as any).KycWidget) {
-      toast.error("KYC Widget not loaded yet. Please try again in a moment.");
+  /**
+   * White-Label API: direct server-to-server NIN verification.
+   * Calls our Next.js API route which forwards to NetApps using the secret key.
+   * No widget / embed script required.
+   */
+  const handleVerifyNin = async () => {
+    const nin = formData.nin.trim();
+    if (!nin) {
+      toast.error("Please enter a NIN before verifying.");
+      return;
+    }
+    if (!/^\d{11}$/.test(nin)) {
+      toast.error("NIN must be exactly 11 digits.");
       return;
     }
 
-    const handle = (window as any).KycWidget.init({
-      publicKey: process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e",
-      userRef,
-      slug: "ippis_nin_verification",
-      name: "Taraba Staff", // We could pass formData.firstName if we wanted
-      levelSlug: "tier_1",
-      display: "modal",
-      environment: "live", // Required when using PROD keys
-      callbacks: {
-        onSuccess: async () => {
-          toast.success("Verification successful! Fetching data...");
-          try {
-            const res = await fetch(`/api/kyc-status?userRef=${userRef}&slug=ippis_nin_verification`);
-            const data = await res.json();
-            
-            if (data && !data.error) {
-              setNinVerified(true);
-              setNinData(data);
-              
-              // Map verified data into form safely if available
-              setFormData(prev => ({
-                ...prev,
-                nin: data.nin || data.NIN || prev.nin,
-                firstName: data.firstName || data.firstname || prev.firstName,
-                lastName: data.lastName || data.surname || prev.lastName,
-                birthdate: data.birthdate || data.dob || prev.birthdate,
-              }));
-              toast.success("NIN Data securely fetched and auto-filled.");
-            } else {
-              toast.error("Failed to fetch verified data from our server.");
-            }
-          } catch (e) {
-            toast.error("Error communicating with server.");
-          }
-        },
-        onError: ({ message }: any) => {
-          toast.error(`Verification error: ${message}`);
-        },
+    setIsVerifying(true);
+    const toastId = toast.loading("Verifying NIN with NIMC…");
+
+    try {
+      const res = await fetch("/api/nin-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nin }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        toast.error(result.error || "NIN verification failed. Please try again.", { id: toastId });
+        return;
       }
-    });
+
+      const identity = result.data;
+      setNinVerified(true);
+      setNinData(result.raw ?? result.data);
+
+      // Auto-fill matching form fields from the verified identity
+      setFormData(prev => ({
+        ...prev,
+        nin: identity.nin || prev.nin,
+        firstName: identity.firstName || prev.firstName,
+        lastName: identity.lastName || prev.lastName,
+        middleName: identity.middleName || prev.middleName,
+        gender: identity.gender
+          ? identity.gender.charAt(0).toUpperCase() + identity.gender.slice(1).toLowerCase()
+          : prev.gender,
+        birthdate: identity.birthdate
+          ? new Date(identity.birthdate).toISOString().split("T")[0]
+          : prev.birthdate,
+      }));
+
+      toast.success("NIN verified and identity data auto-filled.", { id: toastId });
+    } catch (err) {
+      console.error("[NIN Verify]", err);
+      toast.error("Network error during NIN verification.", { id: toastId });
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -175,15 +186,6 @@ export default function AddEmployeePage() {
 
   return (
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in-up">
-      <Script 
-        src="https://kyc-verify-v2.netapps.ng/embed.js" 
-        strategy="lazyOnload" 
-        data-public-key={process.env.NEXT_PUBLIC_NETAPPS_PUBLIC_KEY || "NA_PUB_PROD-ec7d8308578d9a23909acdd53978ef9e"}
-        data-user-ref="placeholder-ref"
-        data-slug="ippis_nin_verification"
-        data-name="Taraba Staff"
-        data-level-slug="tier_1"
-      />
 
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -307,12 +309,20 @@ export default function AddEmployeePage() {
                   className={`w-full h-10 px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] focus:border-transparent transition-colors ${ninVerified ? 'border-green-300 bg-green-50' : 'border-gray-300'}`}
                 />
                 {!ninVerified && (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={handleVerifyNin}
-                    className="whitespace-nowrap px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors"
+                    disabled={isVerifying}
+                    className="whitespace-nowrap inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Verify NIN
+                    {isVerifying ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Verifying…
+                      </>
+                    ) : (
+                      "Verify NIN"
+                    )}
                   </button>
                 )}
               </div>
