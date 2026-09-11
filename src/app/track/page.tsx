@@ -112,6 +112,33 @@ const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; bg: 
   },
 };
 
+// Helper to format dates, including Excel serial numbers (e.g. "45658" or "01/01/45658")
+const formatDisplayDate = (dateVal: any) => {
+  if (!dateVal) return "—";
+  
+  if (typeof dateVal === "string") {
+    // If it's a pure number like "45658"
+    if (/^\d{4,5}$/.test(dateVal)) {
+      const excelDays = parseInt(dateVal, 10);
+      const d = new Date(Date.UTC(1899, 11, 30));
+      d.setUTCDate(d.getUTCDate() + excelDays);
+      return d.toLocaleDateString("en-NG", { year: "numeric", month: "short", day: "numeric" });
+    }
+    
+    // If it was already incorrectly parsed as a year, e.g. "01/01/45658" or contains 5 digits
+    const match = dateVal.match(/(\d{5})/);
+    if (match) {
+      const excelDays = parseInt(match[1], 10);
+      const d = new Date(Date.UTC(1899, 11, 30));
+      d.setUTCDate(d.getUTCDate() + excelDays);
+      return d.toLocaleDateString("en-NG", { year: "numeric", month: "short", day: "numeric" });
+    }
+  }
+
+  const parsed = new Date(dateVal);
+  return isNaN(parsed.getTime()) ? "—" : parsed.toLocaleDateString("en-NG", { year: "numeric", month: "short", day: "numeric" });
+};
+
 export default function TrackPage() {
   const { appName, appLogo } = useAppConfig();
   const [activeTab, setActiveTab] = useState<"id" | "email">("id");
