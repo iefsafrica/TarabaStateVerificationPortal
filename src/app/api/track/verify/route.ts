@@ -25,9 +25,13 @@ export async function POST(request: Request) {
 
     const dateFields = ["birthdate", "dateOfFirstAppointment", "dateOfConfirmation", "dateOfPresentAppointment"];
     for (const df of dateFields) {
-      if (updatedData[df] && typeof updatedData[df] === "string") {
-        const parsed = new Date(updatedData[df]);
-        updatedData[df] = isNaN(parsed.getTime()) ? null : parsed;
+      if (typeof updatedData[df] === "string") {
+        if (!updatedData[df].trim()) {
+          updatedData[df] = null;
+        } else {
+          const parsed = new Date(updatedData[df]);
+          updatedData[df] = isNaN(parsed.getTime()) ? null : parsed;
+        }
       }
     }
 
