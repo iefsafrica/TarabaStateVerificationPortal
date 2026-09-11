@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import naija from "naija-state-local-government";
 
 // Helper component for standard inputs moved outside to prevent re-renders causing focus loss
-const InputGroup = ({ label, name, value, onChange, type = "text", placeholder, required = false }: any) => (
+const InputGroup = ({ label, name, value, onChange, type = "text", placeholder, required = false, disabled = false }: any) => (
   <div className="space-y-1.5">
     <label className="text-sm font-medium text-gray-700">
       {label} {required && <span className="text-red-500">*</span>}
