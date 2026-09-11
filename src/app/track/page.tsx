@@ -515,7 +515,7 @@ export default function TrackPage() {
                   )}
                   <DetailItem icon={<User className="h-4 w-4" />} label="Full Name" value={`${result.firstName} ${result.middleName || ""} ${result.lastName}`.trim()} />
                   <DetailItem icon={<Fingerprint className="h-4 w-4" />} label="Gender" value={result.gender || "—"} />
-                  <DetailItem icon={<Calendar className="h-4 w-4" />} label="Date of Birth" value={result.birthdate ? new Date(result.birthdate).toLocaleDateString() : "—"} />
+                  <DetailItem icon={<Calendar className="h-4 w-4" />} label="Date of Birth" value={formatDisplayDate(result.birthdate)} />
                   <DetailItem icon={<MapPin className="h-4 w-4" />} label="State of Origin" value={result.stateOfOrigin || "—"} />
                   <DetailItem icon={<MapPin className="h-4 w-4" />} label="LGA of Origin" value={result.lgaOfOrigin || result.lga || "—"} />
                   <DetailItem icon={<Fingerprint className="h-4 w-4" />} label="Nationality" value={result.nationality || "—"} />
@@ -527,8 +527,8 @@ export default function TrackPage() {
                   <DetailItem icon={<Briefcase className="h-4 w-4" />} label="Designation / Rank" value={result.designation || result.rank || "—"} />
                   <DetailItem icon={<Briefcase className="h-4 w-4" />} label="Grade Level" value={result.grade || "—"} />
                   <DetailItem icon={<Briefcase className="h-4 w-4" />} label="Cadre" value={result.cadre || "—"} />
-                  <DetailItem icon={<Calendar className="h-4 w-4" />} label="Date of 1st Appt" value={result.dateOfFirstAppointment ? new Date(result.dateOfFirstAppointment).toLocaleDateString() : "—"} />
-                  <DetailItem icon={<Calendar className="h-4 w-4" />} label="Last Promotion" value={result.dateOfLastPromotion ? new Date(result.dateOfLastPromotion).toLocaleDateString() : "—"} />
+                  <DetailItem icon={<Calendar className="h-4 w-4" />} label="Date of 1st Appt" value={formatDisplayDate(result.dateOfFirstAppointment)} />
+                  <DetailItem icon={<Calendar className="h-4 w-4" />} label="Last Promotion" value={formatDisplayDate(result.dateOfLastPromotion)} />
                </div>
 
                <div className="p-5 flex flex-col gap-4">
