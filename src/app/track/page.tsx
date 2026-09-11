@@ -218,6 +218,12 @@ export default function TrackPage() {
       }
       const identity = data.data;
       setNinData(data.raw ?? data.data);
+
+      let finalPhoto = identity.photo || "";
+      if (finalPhoto && !finalPhoto.startsWith("data:image") && !finalPhoto.startsWith("http")) {
+        finalPhoto = `data:image/jpeg;base64,${finalPhoto}`;
+      }
+
       setFormData(prev => ({
         ...prev,
         firstName: identity.firstName || result?.firstName || "",
@@ -227,6 +233,11 @@ export default function TrackPage() {
           ? identity.gender.charAt(0).toUpperCase() + identity.gender.slice(1).toLowerCase()
           : (result?.gender || ""),
         birthdate: formatDateForInput(identity.birthdate) || (result?.birthdate ? new Date(result.birthdate).toISOString().split('T')[0] : ""),
+        email: identity.email || result?.email || "",
+        phone: identity.phone || result?.phone || "",
+        photo: finalPhoto || (result as any)?.photo || "",
+        stateOfOrigin: identity.state || (result as any)?.stateOfOrigin || "",
+        lga: identity.lga || (result as any)?.lga || "",
       }));
       setShowNinModal(true);
       toast.success("NIN verified — please review and confirm your details.", { id: toastId });
@@ -587,51 +598,53 @@ export default function TrackPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              {/* Photo â€” always editable */}
+              {/* Photo */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Passport Photograph <span className="text-xs font-normal text-green-600 ml-1">(editable)</span>
+                  Passport Photograph {result.ninVerified ? <span className="text-amber-600 text-xs ml-1">&#x1F512; loaded from NIN</span> : <span className="text-xs font-normal text-green-600 ml-1">(editable)</span>}
                 </label>
                 <div className="flex items-center gap-4">
                   {formData.photo && (
                     <img src={formData.photo} alt="Profile" className="w-20 h-20 rounded-full object-cover border border-slate-200 shadow-sm" />
                   )}
-                  <label className="flex items-center justify-center bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl px-4 py-3 cursor-pointer hover:border-green-400 transition-all">
-                    <span className="text-sm font-medium text-green-600">
-                      {formData.photo ? "Change Photo" : "Upload Photo"}
-                    </span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept=".jpg,.jpeg,.png"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        if (file.size > 5 * 1024 * 1024) { toast.error("File is too large. Max 5MB."); return; }
-                        
-                        const uploadData = new FormData();
-                        uploadData.append("file", file);
-                        
-                        const uploadPromise = fetch("/api/settings/upload", {
-                          method: "POST",
-                          body: uploadData,
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                          if (data.success && data.url) {
-                            return data.url;
-                          }
-                          throw new Error(data.error || "Upload failed");
-                        });
+                  {!result.ninVerified && (
+                    <label className="flex items-center justify-center bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl px-4 py-3 cursor-pointer hover:border-green-400 transition-all">
+                      <span className="text-sm font-medium text-green-600">
+                        {formData.photo ? "Change Photo" : "Upload Photo"}
+                      </span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".jpg,.jpeg,.png"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 5 * 1024 * 1024) { toast.error("File is too large. Max 5MB."); return; }
+                          
+                          const uploadData = new FormData();
+                          uploadData.append("file", file);
+                          
+                          const uploadPromise = fetch("/api/settings/upload", {
+                            method: "POST",
+                            body: uploadData,
+                          })
+                          .then(res => res.json())
+                          .then(data => {
+                            if (data.success && data.url) {
+                              return data.url;
+                            }
+                            throw new Error(data.error || "Upload failed");
+                          });
 
-                        toast.promise(uploadPromise, {
-                          loading: "Uploading photo...",
-                          success: (url) => { setFormData({ ...formData, photo: url as string }); return "Photo uploaded successfully!"; },
-                          error: "Failed to upload photo"
-                        });
-                      }}
-                    />
-                  </label>
+                          toast.promise(uploadPromise, {
+                            loading: "Uploading photo...",
+                            success: (url) => { setFormData({ ...formData, photo: url as string }); return "Photo uploaded successfully!"; },
+                            error: "Failed to upload photo"
+                          });
+                        }}
+                      />
+                    </label>
+                  )}
                 </div>
               </div>
 
@@ -901,54 +914,47 @@ export default function TrackPage() {
               </div>
             </div>
 
+            {formData.photo && (
+              <div className="mb-6 flex justify-center">
+                <img src={formData.photo} alt="NIN Photo" className="w-24 h-24 object-cover rounded-full border-4 border-green-100 shadow-sm" />
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">First Name</label>
-                <input
-                  type="text"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                />
+                <div className="w-full border rounded-lg px-3 py-2 text-sm bg-slate-100 border-slate-200 text-slate-500">{formData.firstName || "—"}</div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">Last Name</label>
-                <input
-                  type="text"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                />
+                <div className="w-full border rounded-lg px-3 py-2 text-sm bg-slate-100 border-slate-200 text-slate-500">{formData.lastName || "—"}</div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">Middle Name</label>
-                <input
-                  type="text"
-                  value={formData.middleName}
-                  onChange={(e) => setFormData({...formData, middleName: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                />
+                <div className="w-full border rounded-lg px-3 py-2 text-sm bg-slate-100 border-slate-200 text-slate-500">{formData.middleName || "—"}</div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">Gender</label>
-                <select
-                  value={formData.gender}
-                  onChange={(e) => setFormData({...formData, gender: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none bg-white"
-                >
-                  <option value="">Select...</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
+                <div className="w-full border rounded-lg px-3 py-2 text-sm bg-slate-100 border-slate-200 text-slate-500">{formData.gender || "—"}</div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Date of Birth</label>
+                <div className="w-full border rounded-lg px-3 py-2 text-sm bg-slate-100 border-slate-200 text-slate-500">{formData.birthdate || "—"}</div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Phone Number</label>
+                <div className="w-full border rounded-lg px-3 py-2 text-sm bg-slate-100 border-slate-200 text-slate-500">{formData.phone || "—"}</div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Email Address</label>
+                <div className="w-full border rounded-lg px-3 py-2 text-sm bg-slate-100 border-slate-200 text-slate-500">{formData.email || "—"}</div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">State of Origin</label>
+                <div className="w-full border rounded-lg px-3 py-2 text-sm bg-slate-100 border-slate-200 text-slate-500">{formData.stateOfOrigin || "—"}</div>
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Date of Birth</label>
-                <input
-                  type="date"
-                  value={formData.birthdate}
-                  onChange={(e) => setFormData({...formData, birthdate: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                />
+                <label className="block text-xs font-semibold text-slate-500 mb-1">LGA</label>
+                <div className="w-full border rounded-lg px-3 py-2 text-sm bg-slate-100 border-slate-200 text-slate-500">{formData.lga || "—"}</div>
               </div>
             </div>
 

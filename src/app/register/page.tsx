@@ -116,6 +116,9 @@ export default function RegisterPage() {
         dateOfBirth: identity.birthdate
           ? new Date(identity.birthdate).toISOString().split("T")[0]
           : prev.dateOfBirth,
+        email: identity.email || prev.email,
+        phone: identity.phone || prev.phone,
+        address: identity.address || prev.address,
         ninData: result.raw ?? result.data,
       }));
       toast.success("NIN verified and data auto-filled.", { id: toastId });
@@ -393,11 +396,11 @@ export default function RegisterPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-slate-800 mb-2">Email Address</label>
-                      <input type="email" value={formData.email} onChange={e => update("email", e.target.value)} placeholder="you@example.com" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white" />
+                      <input type="email" value={formData.email} onChange={e => update("email", e.target.value)} placeholder="you@example.com" disabled={ninVerified} className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all ${ninVerified ? "bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" : "bg-white border-slate-200 focus:ring-green-500/20 focus:border-green-500"}`} />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-slate-800 mb-2">Phone Number</label>
-                      <input type="tel" value={formData.phone} onChange={e => update("phone", e.target.value)} placeholder="e.g., 08012345678" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white" />
+                      <input type="tel" value={formData.phone} onChange={e => update("phone", e.target.value)} placeholder="e.g., 08012345678" disabled={ninVerified} className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all ${ninVerified ? "bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" : "bg-white border-slate-200 focus:ring-green-500/20 focus:border-green-500"}`} />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -416,7 +419,7 @@ export default function RegisterPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-slate-800 mb-2">Residential Address</label>
-                    <textarea value={formData.address} onChange={e => update("address", e.target.value)} placeholder="Enter your full residential address" rows={2} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-none" />
+                    <textarea value={formData.address} onChange={e => update("address", e.target.value)} placeholder="Enter your full residential address" rows={2} disabled={ninVerified} className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all resize-none ${ninVerified ? "bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" : "bg-white border-slate-200 focus:ring-green-500/20 focus:border-green-500"}`} />
                   </div>
                 </div>
               </div>

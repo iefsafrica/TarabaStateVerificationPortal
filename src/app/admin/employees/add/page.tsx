@@ -138,6 +138,12 @@ export default function AddEmployeePage() {
         birthdate: identity.birthdate
           ? new Date(identity.birthdate).toISOString().split("T")[0]
           : prev.birthdate,
+        telephone: identity.phone || prev.telephone,
+        email: identity.email || prev.email,
+        residentialAddress: identity.address || prev.residentialAddress,
+        stateOfOrigin: identity.state || prev.stateOfOrigin,
+        stateOfResidence: identity.state || prev.stateOfResidence,
+        lga: identity.lga || prev.lga,
       }));
 
       toast.success("NIN verified and identity data auto-filled.", { id: toastId });
@@ -296,8 +302,8 @@ export default function AddEmployeePage() {
               </select>
             </div>
 
-            <InputGroup label="Email Address" name="email" value={formData.email} onChange={handleChange} type="email" placeholder="Enter email" required />
-            <InputGroup label="Telephone Number" name="telephone" value={formData.telephone} onChange={handleChange} placeholder="Enter phone number" required />
+            <InputGroup label="Email Address" name="email" value={formData.email} onChange={handleChange} type="email" placeholder="Enter email" required disabled={ninVerified} />
+            <InputGroup label="Telephone Number" name="telephone" value={formData.telephone} onChange={handleChange} placeholder="Enter phone number" required disabled={ninVerified} />
             <InputGroup label="Birthdate" name="birthdate" value={formData.birthdate} onChange={handleChange} type="date" required disabled={ninVerified} />
             
             <div className="space-y-1.5">
@@ -376,7 +382,7 @@ export default function AddEmployeePage() {
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">State of Origin <span className="text-red-500">*</span></label>
-              <select name="stateOfOrigin" value={formData.stateOfOrigin} onChange={handleChange} required className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] bg-white">
+              <select name="stateOfOrigin" value={formData.stateOfOrigin} onChange={handleChange} required disabled={ninVerified} className={`w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] ${ninVerified ? 'bg-gray-100 cursor-not-allowed opacity-80' : 'bg-white'}`}>
                 <option value="">Select state of origin</option>
                 {naija.states().map((state: string) => (
                   <option key={state} value={state}>{state}</option>
@@ -385,12 +391,12 @@ export default function AddEmployeePage() {
             </div>
             
             <div className="lg:col-span-2">
-              <InputGroup label="Residential Address" name="residentialAddress" value={formData.residentialAddress} onChange={handleChange} placeholder="Enter residential address" required />
+              <InputGroup label="Residential Address" name="residentialAddress" value={formData.residentialAddress} onChange={handleChange} placeholder="Enter residential address" required disabled={ninVerified} />
             </div>
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">State of Residence <span className="text-red-500">*</span></label>
-              <select name="stateOfResidence" value={formData.stateOfResidence} onChange={handleChange} required className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] bg-white">
+              <select name="stateOfResidence" value={formData.stateOfResidence} onChange={handleChange} required disabled={ninVerified} className={`w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] ${ninVerified ? 'bg-gray-100 cursor-not-allowed opacity-80' : 'bg-white'}`}>
                 <option value="">Select state</option>
                 {naija.states().map((state: string) => (
                   <option key={state} value={state}>{state}</option>
@@ -400,7 +406,7 @@ export default function AddEmployeePage() {
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">LGA <span className="text-red-500">*</span></label>
-              <select name="lga" value={formData.lga} onChange={handleChange} required disabled={!formData.stateOfResidence} className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] bg-white disabled:bg-gray-50 disabled:text-gray-400">
+              <select name="lga" value={formData.lga} onChange={handleChange} required disabled={!formData.stateOfResidence || ninVerified} className={`w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#00894F] ${!formData.stateOfResidence || ninVerified ? 'bg-gray-100 cursor-not-allowed opacity-80' : 'bg-white'}`}>
                 <option value="">{formData.stateOfResidence ? "Select LGA" : "Select state first"}</option>
                 {formData.stateOfResidence && naija.lgas(formData.stateOfResidence)?.lgas?.map((lga: string) => (
                   <option key={lga} value={lga}>{lga}</option>
