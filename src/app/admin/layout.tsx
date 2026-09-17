@@ -18,7 +18,8 @@ import {
   ChevronLeft,
   Menu,
   X,
-  Settings
+  Settings,
+  Activity
 } from "lucide-react";
 
 import { useAppConfig } from "@/components/AppConfigContext";
@@ -120,6 +121,14 @@ export default function AdminLayout({
     { name: "Roles", href: "/admin/roles", icon: Shield },
     { name: "Permissions", href: "/admin/permissions", icon: Key },
     { name: "Settings", href: "/admin/settings", icon: Settings },
+    { 
+      name: "System Logs", 
+      icon: Activity, 
+      subItems: [
+        { name: "Audit Logs", href: "/admin/audit-logs" },
+        { name: "Login Logs", href: "/admin/login-logs" }
+      ]
+    },
   ];
 
   if (pathname.includes("/receipt")) {
@@ -266,6 +275,8 @@ export default function AdminLayout({
                 {pathname === "/admin/permissions" && "Permissions"}
                 {pathname === "/admin/settings" && "Settings"}
                 {pathname === "/admin/profile" && "My Profile"}
+                {pathname === "/admin/audit-logs" && "Audit Logs"}
+                {pathname === "/admin/login-logs" && "Login Logs"}
               </h1>
               <p className="text-xs text-gray-500">{appName}</p>
             </div>
